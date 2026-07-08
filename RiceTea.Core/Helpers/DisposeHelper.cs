@@ -5,6 +5,8 @@ using System.Threading;
 
 namespace RiceTea.Core.Helpers;
 
+#pragma warning disable CS8824
+
 public static class DisposeHelper
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -126,7 +128,7 @@ public static class DisposeHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SwapDisposeWeak<T>([NotNullIfNotNull(nameof(value))] ref T? location, T? value = null) where T : class?
+    public static void SwapDisposeWeak<T>([NotNullIfNotNull(nameof(value))] ref T? location, T? value = null) where T : class
     {
         T? oldObject = location;
         location = value;
@@ -162,7 +164,7 @@ public static class DisposeHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SwapDisposeInterlocked<T>([NotNullIfNotNull(nameof(value))] ref T? location, T? value = null) where T : class?, IDisposable?
+    public static void SwapDisposeInterlocked<T>([NotNullIfNotNull(nameof(value))] ref T? location, T? value = null) where T : class, IDisposable
     {
         T? oldObject = Interlocked.Exchange(ref location, value);
         if (ReferenceEquals(oldObject, value) || oldObject is null)
@@ -171,7 +173,7 @@ public static class DisposeHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SwapDisposeInterlockedWeak<T>([NotNullIfNotNull(nameof(value))] ref T? location, T? value = null) where T : class?
+    public static void SwapDisposeInterlockedWeak<T>([NotNullIfNotNull(nameof(value))] ref T? location, T? value = null) where T : class
     {
         T? oldObject = Interlocked.Exchange(ref location, value);
         if (ReferenceEquals(oldObject, value) || oldObject is not IDisposable disposable)
@@ -204,7 +206,7 @@ public static class DisposeHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void NullSwapOrDispose<T>([NotNullIfNotNull(nameof(value))] ref T? location, T value) where T : class, IDisposable
+    public static void NullSwapOrDispose<T>([NotNullIfNotNull(nameof(value))] ref T? location, T? value) where T : class, IDisposable
     {
         T? oldObject = Interlocked.CompareExchange(ref location, value, null);
         if (oldObject is null || value is null || ReferenceEquals(oldObject, value))
@@ -213,9 +215,9 @@ public static class DisposeHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void NullSwapOrDispose<T>([NotNullIfNotNull(nameof(value))] ref T[]? location, T[] value) where T : class, IDisposable
+    public static void NullSwapOrDispose<T>([NotNullIfNotNull(nameof(value))] ref T[]? location, T[]? value) where T : class?, IDisposable
     {
-        T[]? oldObject = Interlocked.CompareExchange(ref location, value, null);
+        T[]? oldObject = InterlockedHelper.CompareExchange(ref location, value, null);
         if (oldObject is null || value is null || ReferenceEquals(oldObject, value))
             return;
         foreach (T item in value)
@@ -223,7 +225,7 @@ public static class DisposeHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void NullSwapOrDisposeWeak<T>([NotNullIfNotNull(nameof(value))] ref T? location, T value) where T : class
+    public static void NullSwapOrDisposeWeak<T>([NotNullIfNotNull(nameof(value))] ref T? location, T? value) where T : class
     {
         T? oldObject = Interlocked.CompareExchange(ref location, value, null);
         if (oldObject is null || ReferenceEquals(oldObject, value))
@@ -232,12 +234,12 @@ public static class DisposeHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void NullSwapOrDisposeWeak<T>([NotNullIfNotNull(nameof(value))] ref T[]? location, T[] value) where T : class
+    public static void NullSwapOrDisposeWeak<T>([NotNullIfNotNull(nameof(value))] ref T[]? location, T[]? value) where T : class
     {
         T[]? oldObject = Interlocked.CompareExchange(ref location, value, null);
         if (oldObject is null || ReferenceEquals(oldObject, value))
             return;
-        foreach (T item in value)
+        foreach (T item in value!)
             (item as IDisposable)?.Dispose();
     }
 }
