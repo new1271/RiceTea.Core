@@ -157,7 +157,7 @@ internal class ManagedThreadId
             int childSize = ChildSize;
             if (id < childSize)
             {
-                left = left.RecycleId(id);
+                left = left!.RecycleId(id);
             }
             else
             {
@@ -169,7 +169,7 @@ internal class ManagedThreadId
                 }
                 else
                 {
-                    right = right.RecycleId(id - BitsPerNode);
+                    right = right!.RecycleId(id - BitsPerNode);
                 }
             }
             return new ImmutableIdDispenser(left, right, _used - 1, _size, bitmap);
@@ -187,7 +187,7 @@ internal class ManagedThreadId
     // when a Thread object cannot be created yet. We also store it in the Thread.CurrentThread object,
     // because that object may have longer lifetime than the OS thread.
     [ThreadStatic]
-    private static ManagedThreadId t_currentThreadId;
+    private static ManagedThreadId? t_currentThreadId;
     [ThreadStatic]
     private static int t_currentManagedThreadId;
 
@@ -218,7 +218,7 @@ internal class ManagedThreadId
         var priorIdDispenser = Volatile.Read(ref s_idDispenser);
         for (; ; )
         {
-            var updatedIdDispenser = priorIdDispenser.AllocateId(out id);
+            var updatedIdDispenser = priorIdDispenser!.AllocateId(out id);
             var interlockedResult = Interlocked.CompareExchange(ref s_idDispenser, updatedIdDispenser, priorIdDispenser);
             if (object.ReferenceEquals(priorIdDispenser, interlockedResult))
                 break;
@@ -240,7 +240,7 @@ internal class ManagedThreadId
         var priorIdDispenser = Volatile.Read(ref s_idDispenser);
         for (; ; )
         {
-            var updatedIdDispenser = s_idDispenser.RecycleId(id);
+            var updatedIdDispenser = s_idDispenser!.RecycleId(id);
             var interlockedResult = Interlocked.CompareExchange(ref s_idDispenser, updatedIdDispenser, priorIdDispenser);
             if (object.ReferenceEquals(priorIdDispenser, interlockedResult))
                 break;
@@ -267,7 +267,7 @@ internal class ManagedThreadId
         if (t_currentManagedThreadId == IdNone)
             MakeForCurrentThread();
 
-        return t_currentThreadId;
+        return t_currentThreadId!;
     }
 
     private static int MakeForCurrentThread()

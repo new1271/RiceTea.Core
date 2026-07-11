@@ -184,55 +184,39 @@ public static unsafe class StringHelper
         return string.Join(separator, values);
     }
 
-    public static string FilteredJoin(char separator, Func<string, bool> filter, params string[] values)
+    public static string FilteredJoin(char separator, Func<string?, bool>? filter, params string?[] values)
     {
-        if (values is null)
-            return string.Empty;
         if (filter is null)
             return string.Join(separator.ToString(), values);
-        int length = values.Length;
-        switch (length)
+
+        return Core(separator, filter, values) ?? string.Empty;
+       
+        static string? Core(char separator, Func<string?, bool> filter, string?[] values)
         {
-            case 0:
-                return string.Empty;
-            case 1:
-                {
-                    string str = values[0];
-                    return filter(str) ? str : string.Empty;
-                }
-            default:
-                if (length < 0)
-                    return string.Empty;
-                bool needAppendSeperator = separator != '\0';
-                int totalLength = 0;
-                int* strLens = stackalloc int[length];
-                for (int i = 0; i < length - 1; i++)
-                {
-                    string str = values[i];
-                    if (!filter(str))
+            int length = values.Length;
+            switch (length)
+            {
+                case 0:
+                    return null;
+                case 1:
                     {
-                        strLens[i] = 0;
-                        continue;
+                        string? str = values[0];
+                        return filter(str) ? str : null;
                     }
-                    if (str is null)
+                default:
+                    if (length < 0)
+                        return null;
+                    bool needAppendSeperator = separator != '\0';
+                    int totalLength = 0;
+                    int* strLens = stackalloc int[length];
+                    for (int i = 0; i < length - 1; i++)
                     {
-                        totalLength += 4;
-                        strLens[i] = 4;
-                    }
-                    else
-                    {
-                        int strLen = str.Length;
-                        totalLength += strLen;
-                        strLens[i] += strLen;
-                    }
-                    if (needAppendSeperator)
-                        totalLength++;
-                }
-                {
-                    int i = length - 1;
-                    string str = values[i];
-                    if (filter(str))
-                    {
+                        string? str = values[i];
+                        if (!filter(str))
+                        {
+                            strLens[i] = 0;
+                            continue;
+                        }
                         if (str is null)
                         {
                             totalLength += 4;
@@ -244,46 +228,66 @@ public static unsafe class StringHelper
                             totalLength += strLen;
                             strLens[i] += strLen;
                         }
-                    }
-                    else
-                    {
-                        strLens[i] = 0;
-                    }
-                }
-                string result = new string(separator, totalLength);
-                fixed (char* c = result)
-                {
-                    char* iterator = c;
-                    for (int i = 0; i < length - 1; i++)
-                    {
-                        int strLen = strLens[i];
-                        if (strLen <= 0)
-                            continue;
-                        string str = values[i];
-                        fixed (char* c2 = str)
-                        {
-                            uint byteCount = unchecked((uint)(sizeof(char) * strLen));
-                            UnsafeHelper.CopyBlock(iterator, c2, byteCount);
-                            iterator += strLen;
-                            if (needAppendSeperator)
-                                iterator++;
-                        }
+                        if (needAppendSeperator)
+                            totalLength++;
                     }
                     {
                         int i = length - 1;
-                        int strLen = strLens[i];
-                        if (strLen > 0)
+                        string? str = values[i];
+                        if (filter(str))
                         {
-                            string str = values[i];
+                            if (str is null)
+                            {
+                                totalLength += 4;
+                                strLens[i] = 4;
+                            }
+                            else
+                            {
+                                int strLen = str.Length;
+                                totalLength += strLen;
+                                strLens[i] += strLen;
+                            }
+                        }
+                        else
+                        {
+                            strLens[i] = 0;
+                        }
+                    }
+                    string result = new string(separator, totalLength);
+                    fixed (char* c = result)
+                    {
+                        char* iterator = c;
+                        for (int i = 0; i < length - 1; i++)
+                        {
+                            int strLen = strLens[i];
+                            if (strLen <= 0)
+                                continue;
+                            string str = values[i] ?? "null";
                             fixed (char* c2 = str)
                             {
                                 uint byteCount = unchecked((uint)(sizeof(char) * strLen));
                                 UnsafeHelper.CopyBlock(iterator, c2, byteCount);
+                                iterator += strLen;
+                                if (needAppendSeperator)
+                                    iterator++;
+                            }
+                        }
+                        {
+                            int i = length - 1;
+                            int strLen = strLens[i];
+                            if (strLen > 0)
+                            {
+                                string str = values[i] ?? "null";
+                                fixed (char* c2 = str)
+                                {
+                                    uint byteCount = unchecked((uint)(sizeof(char) * strLen));
+                                    UnsafeHelper.CopyBlock(iterator, c2, byteCount);
+                                }
                             }
                         }
                     }
-                }
-                return result;
+                    return result;
+            }
         }
     }
 
