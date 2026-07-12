@@ -78,6 +78,14 @@ public static class StringWrapperExtensions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static StringWrapper CreateAsciiStringUnsafe(ref readonly byte reference, int length)
+        {
+            if (length <= 0)
+                return StringWrapper.Empty;
+            return AsciiString.Create(in reference, unchecked((nuint)length));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe StringWrapper CreateLatin1String(in ReadOnlyMemory<byte> memory)
         {
             int length = memory.Length;

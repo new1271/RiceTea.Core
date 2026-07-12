@@ -40,9 +40,25 @@ internal sealed partial class AsciiString : AsciiLikeString, IPinnableReference<
         if (length >= MaxStringLength)
             throw new OutOfMemoryException();
 
-        byte[] buffer = new byte[length + 1];
+        byte[] buffer = ArrayHelper.CreateUninitializedArray<byte>((int)(length + 1));
         fixed (byte* ptr = buffer)
+        {
+            ptr[length] = 0;
             UnsafeHelper.CopyBlockUnaligned(ptr, source, length * sizeof(byte));
+        }
+        return new AsciiString(buffer);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AsciiString Create(ref readonly byte source, nuint length)
+    {
+        if (length >= MaxStringLength)
+            throw new OutOfMemoryException();
+
+        byte[] buffer = ArrayHelper.CreateUninitializedArray<byte>((int)(length + 1));
+        ref byte bufferRef = ref UnsafeHelper.GetArrayDataReference(buffer);
+        UnsafeHelper.AddByteOffset(ref bufferRef, length) = 0;
+        UnsafeHelper.CopyBlockUnaligned(ref bufferRef, in source, length * sizeof(byte));
         return new AsciiString(buffer);
     }
 

@@ -113,9 +113,17 @@ public static unsafe partial class UnsafeHelper
 
     public static partial void CopyBlock(void* destination, void* source, nuint byteCount);
 
+    public static partial void CopyBlock(ref byte destination, ref readonly byte source, uint byteCount);
+
+    public static partial void CopyBlock(ref byte destination, ref readonly byte source, nuint byteCount);
+
     public static partial void CopyBlockUnaligned(void* destination, void* source, uint byteCount);
 
     public static partial void CopyBlockUnaligned(void* destination, void* source, nuint byteCount);
+
+    public static partial void CopyBlockUnaligned(ref byte destination, ref readonly byte source, uint byteCount);
+
+    public static partial void CopyBlockUnaligned(ref byte destination, ref readonly byte source, nuint byteCount);
 
     public static partial TTo As<TFrom, TTo>(TFrom source);
 

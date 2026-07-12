@@ -260,6 +260,20 @@ public static unsafe partial class UnsafeHelper
         IL.Emit.Cpblk();
     }
 
+    /// <inheritdoc cref="Unsafe.CopyBlock(ref byte, ref readonly byte, uint)"/>
+    [Inline(InlineBehavior.Keep, export: true)]
+    public static partial void CopyBlock(ref byte destination, ref readonly byte source, uint byteCount) => Unsafe.CopyBlock(ref destination, in source, byteCount);
+
+    /// <inheritdoc cref="Unsafe.CopyBlock(ref byte, ref readonly byte, uint)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static partial void CopyBlock(ref byte destination, ref readonly byte source, nuint byteCount)
+    {
+        IL.PushInRef(ref destination);
+        IL.PushInRef(in source);
+        IL.Push(byteCount);
+        IL.Emit.Cpblk();
+    }
+
     /// <inheritdoc cref="Unsafe.CopyBlockUnaligned(void*, void*, uint)"/>
     [Inline(InlineBehavior.Keep, export: true)]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -271,6 +285,22 @@ public static unsafe partial class UnsafeHelper
     {
         IL.Push(destination);
         IL.Push(source);
+        IL.Push(byteCount);
+        IL.Emit.Unaligned(1);
+        IL.Emit.Cpblk();
+    }
+
+    /// <inheritdoc cref="Unsafe.CopyBlockUnaligned(ref byte, ref readonly byte, uint)"/>
+    [Inline(InlineBehavior.Keep, export: true)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static partial void CopyBlockUnaligned(ref byte destination, ref readonly byte source, uint byteCount) => Unsafe.CopyBlockUnaligned(ref destination, in source, byteCount);
+
+    /// <inheritdoc cref="Unsafe.CopyBlockUnaligned(ref byte, ref readonly byte, uint)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static partial void CopyBlockUnaligned(ref byte destination, ref readonly byte source, nuint byteCount)
+    {
+        IL.PushInRef(ref destination);
+        IL.PushInRef(in source);
         IL.Push(byteCount);
         IL.Emit.Unaligned(1);
         IL.Emit.Cpblk();
