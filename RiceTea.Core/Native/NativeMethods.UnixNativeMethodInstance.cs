@@ -1,10 +1,13 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Threading;
+
+using InlineIL;
 
 using InlineMethod;
 
@@ -59,40 +62,34 @@ partial class NativeMethods
         private static int gettid() => ((delegate* unmanaged[Cdecl]<int>)_gettidFunc)();
 
         [SuppressGCTransition]
-        [DllImport("c", EntryPoint = nameof(syscall))]
+        [DllImport("libc", EntryPoint = nameof(syscall))]
         private static extern nint syscall_fast(nint number);
 
-        [DllImport("c", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
         private static extern nint syscall(nint number);
 
-        [DllImport("c", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("libc", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         private static extern nint syscall(nint number, uint* uaddr, FutexMode mode, uint val, TimeSpecification* timeout);
 
-        [DllImport("c", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
         private static extern nint syscall(nint number, uint* uaddr, FutexMode mode, uint val);
 
-        [DllImport("c", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
         private static extern void* malloc(nuint size);
 
-        [DllImport("c", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
         private static extern void free(void* memblock);
 
-        [DllImport("dl", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr dlopen(byte* filename, int flags);
-
-        [DllImport("dl", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void* dlsym(IntPtr handle, byte* symbol);
-
-        [DllImport("c", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
         private static extern void* memmove(void* dest, void* src, nuint sizeInBytes);
 
-        [DllImport("c", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
         private static extern void* memcpy(void* dest, void* src, nuint sizeInBytes);
 
-        [DllImport("c", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
         private static extern void* mmap(void* ptr, nuint length, ProtectMemoryPageFlags prot, MemoryMapFlags flags, int fd, nint offset);
 
-        [DllImport("c", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
         private static extern int mprotect(void* ptr, nuint length, ProtectMemoryPageFlags flags);
 
         public static int cacheflush(void* addr, int nbytes, int cache)
@@ -104,15 +101,15 @@ partial class NativeMethods
         }
 
         [SuppressGCTransition]
-        [DllImport("c", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
         private static extern int sched_getcpu();
 
         [SuppressGCTransition]
-        [DllImport("c", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
         private static extern int clock_gettime(int clk_id, TimeSpecification* t);
 
         [SuppressGCTransition]
-        [DllImport("c", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
         private static extern int clock_nanosleep(int clk_id, int flags, TimeSpecification* t, TimeSpecification* remain);
 
         public uint GetCurrentThreadId() => (uint)gettid();
@@ -378,7 +375,7 @@ partial class NativeMethods
                 {
                     AsciiEncodingHelper.ReadFromUtf16Buffer(source, source + length, destination, destination + length);
                     destination[length] = 0;
-                    return dlsym(module, destination);
+                    return LibDl.Instance.dlsym(module, destination);
                 }
             }
             finally
@@ -396,7 +393,7 @@ partial class NativeMethods
             {
                 AsciiEncodingHelper.ReadFromUtf16Buffer(source, source + length, destination, destination + length);
                 destination[length] = 0;
-                return dlsym(module, destination);
+                return LibDl.Instance.dlsym(module, destination);
             }
         }
 
@@ -404,7 +401,7 @@ partial class NativeMethods
         private static IntPtr dlopen(string? filename, int flags)
         {
             if (filename is null)
-                return dlopen((byte*)null, flags);
+                return LibDl.Instance.dlopen((byte*)null, flags);
 
             int length = filename.Length;
 
@@ -416,7 +413,7 @@ partial class NativeMethods
                 fixed (byte* destination = buffer)
                 {
                     Utf8EncodingHelper.ReadFromUtf16Buffer(source, source + length, destination, destination + buffer.Length);
-                    return dlopen(destination, flags);
+                    return LibDl.Instance.dlopen(destination, flags);
                 }
             }
             finally
@@ -494,6 +491,78 @@ partial class NativeMethods
         {
             public nuint tv_sec;
             public nuint tv_nsec;
+        }
+
+        private static class LibDl
+        {
+            public static readonly ILibDl Instance = FindInstance();
+
+            private static ILibDl FindInstance()
+            {
+                try
+                {
+                    return CreateModernInstance();
+                }
+                catch (Exception)
+                {
+                    return CreateLegacyInstance();
+                }
+
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static ILibDl CreateModernInstance() => new Modern();
+
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static ILibDl CreateLegacyInstance() => new Legacy();
+            }
+
+            private sealed class Modern : ILibDl
+            {
+                public Modern()
+                {
+                    IL.Emit.Ldtoken(new MethodRef(typeof(Modern), nameof(dlopen)));
+                    IL.Emit.Call(new MethodRef(typeof(RuntimeHelpers), nameof(RuntimeHelpers.PrepareMethod), typeof(RuntimeMethodHandle)));
+                    IL.Emit.Ldtoken(new MethodRef(typeof(Modern), nameof(dlsym)));
+                    IL.Emit.Call(new MethodRef(typeof(RuntimeHelpers), nameof(RuntimeHelpers.PrepareMethod), typeof(RuntimeMethodHandle)));
+                }
+
+                [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+                private static extern IntPtr dlopen(byte* filename, int flags);
+
+                [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+                private static extern void* dlsym(IntPtr handle, byte* symbol);
+
+                IntPtr ILibDl.dlopen(byte* filename, int flags) => dlopen(filename, flags);
+
+                void* ILibDl.dlsym(nint handle, byte* symbol) => dlsym(handle, symbol);
+            }
+
+            private sealed class Legacy : ILibDl
+            {
+                public Legacy()
+                {
+                    IL.Emit.Ldtoken(new MethodRef(typeof(Legacy), nameof(dlopen)));
+                    IL.Emit.Call(new MethodRef(typeof(RuntimeHelpers), nameof(RuntimeHelpers.PrepareMethod), typeof(RuntimeMethodHandle)));
+                    IL.Emit.Ldtoken(new MethodRef(typeof(Legacy), nameof(dlsym)));
+                    IL.Emit.Call(new MethodRef(typeof(RuntimeHelpers), nameof(RuntimeHelpers.PrepareMethod), typeof(RuntimeMethodHandle)));
+                }
+
+                [DllImport("dl", CallingConvention = CallingConvention.Cdecl)]
+                private static extern IntPtr dlopen(byte* filename, int flags);
+
+                [DllImport("dl", CallingConvention = CallingConvention.Cdecl)]
+                private static extern void* dlsym(IntPtr handle, byte* symbol);
+
+                IntPtr ILibDl.dlopen(byte* filename, int flags) => dlopen(filename, flags);
+
+                void* ILibDl.dlsym(nint handle, byte* symbol) => dlsym(handle, symbol);
+            }
+        }
+
+        private interface ILibDl
+        {
+            IntPtr dlopen(byte* filename, int flags);
+
+            void* dlsym(IntPtr handle, byte* symbol);
         }
     }
 }
