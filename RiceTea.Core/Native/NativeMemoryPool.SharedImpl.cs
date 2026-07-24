@@ -75,11 +75,20 @@ unsafe partial class NativeMemoryPool
             if (capacity > GlobalMemoryBlockSizeLimit)
                 return NativeMethods.AllocMemory(capacity);
 
-            capacity >>= 4;
-            int index = MathHelper.Log2(capacity);
-            DebugHelper.ThrowIf(index > GlobalBucketCount);
-            index += MathHelper.BooleanToInt32(capacity >= (1U << index));
-            capacity = (nuint)(1 << (index + 4));
+            int index;
+            if (capacity <= 16)
+            {
+                capacity = 16;
+                index = 0;
+            }
+            else
+            {
+                capacity >>= 4;
+                index = MathHelper.Log2(capacity);
+                DebugHelper.ThrowIf(index > GlobalBucketCount);
+                index += MathHelper.BooleanToInt32(capacity >= (1U << index));
+                capacity = (nuint)(1 << (index + 4));
+            }
 
             void* result;
             if (index < LocalBucketCount)

@@ -71,10 +71,17 @@ partial class ArrayPool<T>
         {
             if (capacity > GlobalArraySizeLimit)
                 return new T[capacity];
-
-            capacity >>= 4;
-            int index = MathHelper.Log2(capacity);
-            index += MathHelper.BooleanToInt32(capacity >= (1U << index));
+            int index;
+            if (capacity <= 16)
+            {
+                index = 0;
+            }
+            else
+            {
+                capacity >>= 4;
+                index = MathHelper.Log2(capacity);
+                index += MathHelper.BooleanToInt32(capacity >= (1U << index));
+            }
 
             T[]? array;
             if (index < LocalBucketCount)
