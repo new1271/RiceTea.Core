@@ -77,6 +77,7 @@ unsafe partial class NativeMemoryPool
 
             capacity >>= 4;
             int index = MathHelper.Log2(capacity);
+            DebugHelper.ThrowIf(index > GlobalBucketCount);
             index += MathHelper.BooleanToInt32(capacity >= (1U << index));
             capacity = (nuint)(1 << (index + 4));
 
