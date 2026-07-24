@@ -2,11 +2,13 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
+using RiceTea.Core.Helpers;
+
 #pragma warning disable CS8500
 
-namespace RiceTea.Core.Helpers;
+namespace RiceTea.Core;
 
-public static class ReferenceHelper
+public static class Cells
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Swap<T>([NotNullIfNotNull(nameof(location2))] ref T? location1, [NotNullIfNotNull(nameof(location1))] ref T? location2)

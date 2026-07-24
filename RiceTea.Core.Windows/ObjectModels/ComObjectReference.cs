@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
-using RiceTea.Core.Helpers;
 using RiceTea.Core.Native;
 
 namespace RiceTea.Core.Windows.ObjectModels;
@@ -75,7 +74,7 @@ public unsafe ref struct ComObjectReference<T> : IUnknown where T : ComObject, n
 
     public T GetAndDispose()
     {
-        void* handle = ReferenceHelper.Exchange(ref _handle, null);
+        void* handle = Cells.Exchange(ref _handle, null);
         T? result = NativeObject.FromNativePointer<T>(handle, _type);
         if (result is null)
             throw new ObjectDisposedException(nameof(NativeObjectReference<>));
@@ -84,7 +83,7 @@ public unsafe ref struct ComObjectReference<T> : IUnknown where T : ComObject, n
 
     public void Dispose()
     {
-        void* handle = ReferenceHelper.Exchange(ref _handle, null);
+        void* handle = Cells.Exchange(ref _handle, null);
         if (handle == null)
             return;
 

@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 
 using RiceTea.Core.Buffers;
 using RiceTea.Core.Extensions;
-using RiceTea.Core.Helpers;
 
 namespace RiceTea.Core.Collections;
 
@@ -53,7 +52,7 @@ public sealed class UpdatableCollection<T, TList> : ICollection<T>, IDisposable 
         lock (list)
         {
             list.Add(item);
-            InterlockedHelper.Increment(ref _version);
+            Atomics.Increment(ref _version);
         }
     }
 
@@ -63,7 +62,7 @@ public sealed class UpdatableCollection<T, TList> : ICollection<T>, IDisposable 
         lock (list)
         {
             list.AddRange(items);
-            InterlockedHelper.Increment(ref _version);
+            Atomics.Increment(ref _version);
         }
     }
 
@@ -73,7 +72,7 @@ public sealed class UpdatableCollection<T, TList> : ICollection<T>, IDisposable 
         lock (list)
         {
             list.AddRange(_list);
-            InterlockedHelper.Increment(ref _version);
+            Atomics.Increment(ref _version);
         }
     }
 
@@ -92,7 +91,7 @@ public sealed class UpdatableCollection<T, TList> : ICollection<T>, IDisposable 
         lock (list)
         {
             list.Add(item);
-            InterlockedHelper.Increment(ref _version);
+            Atomics.Increment(ref _version);
         }
         return true;
     }
@@ -105,7 +104,7 @@ public sealed class UpdatableCollection<T, TList> : ICollection<T>, IDisposable 
         lock (list)
         {
             list.Add(item);
-            InterlockedHelper.Increment(ref _version);
+            Atomics.Increment(ref _version);
         }
     }
 
@@ -113,7 +112,7 @@ public sealed class UpdatableCollection<T, TList> : ICollection<T>, IDisposable 
     {
         TList list = _list;
 
-        ulong newVersion = InterlockedHelper.Read(ref _version);
+        ulong newVersion = Atomics.Read(ref _version);
         if (_oldVersion == newVersion)
             return list;
         _oldVersion = newVersion;

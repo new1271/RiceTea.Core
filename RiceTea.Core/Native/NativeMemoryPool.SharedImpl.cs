@@ -102,12 +102,12 @@ unsafe partial class NativeMemoryPool
                 goto Global;
 
             LocalMemoryBlock localBucket = localBuckets.AsUnsafeRef()[index];
-            if (InterlockedHelper.Read(ref localBucket.Pointer) == default)
+            if (Atomics.Read(ref localBucket.Pointer) == default)
                 goto Global;
             localBucket.EnterBarrier();
             try
             {
-                result = (void*)ReferenceHelper.Exchange(ref localBucket.Pointer, default);
+                result = (void*)Cells.Exchange(ref localBucket.Pointer, default);
                 if (result is null)
                     goto Global;
                 Thread.MemoryBarrier();
@@ -134,7 +134,7 @@ unsafe partial class NativeMemoryPool
 
         Local:
             LocalMemoryBlock localBucket = GetOrCreateLocalArrayBuckets().AsUnsafeRef()[index];
-            if (InterlockedHelper.Read(ref localBucket.Pointer) != default)
+            if (Atomics.Read(ref localBucket.Pointer) != default)
                 goto Global;
             localBucket.EnterBarrier();
             try
@@ -193,7 +193,7 @@ unsafe partial class NativeMemoryPool
                             if (bucket.Pointer == default || ++bucket.Generation < MaxLocalGeneration)
                                 continue;
                             bucket.Generation = GenerationEden;
-                            nuint pointer = InterlockedHelper.Exchange(ref bucket.Pointer, default);
+                            nuint pointer = Atomics.Exchange(ref bucket.Pointer, default);
                             if (pointer != default)
                                 NativeMethods.FreeMemoryBlock(new NativeMemoryBlock((void*)pointer, 1U << (i + 4)));
                         }
@@ -224,23 +224,23 @@ unsafe partial class NativeMemoryPool
             public LocalMemoryBlock(nuint blockSize) => _blockSize = blockSize;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool TryEnterBarrier() => InterlockedHelper.Exchange(ref _barrier, 1) == 0;
+            public bool TryEnterBarrier() => Atomics.Exchange(ref _barrier, 1) == 0;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void EnterBarrier()
             {
                 ref nuint barrierRef = ref _barrier;
 
-                while (InterlockedHelper.Exchange(ref barrierRef, 1) != 0)
+                while (Atomics.Exchange(ref barrierRef, 1) != 0)
                 {
                     SpinWait spin = new SpinWait();
-                    while (InterlockedHelper.Read(ref barrierRef) != 0)
+                    while (Atomics.Read(ref barrierRef) != 0)
                         spin.SpinOnce();
                 }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void ExitBarrier() => InterlockedHelper.Write(ref _barrier, 0);
+            public void ExitBarrier() => Atomics.Write(ref _barrier, 0);
 
             ~LocalMemoryBlock() => NativeMethods.FreeMemoryBlock(new NativeMemoryBlock((void*)Pointer, _blockSize));
         }

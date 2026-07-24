@@ -1,8 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
 
-using RiceTea.Core.Helpers;
-
 namespace RiceTea.Core.Native;
 
 [StructLayout(LayoutKind.Auto)]
@@ -21,7 +19,7 @@ public unsafe ref struct NativeObjectReference<T> : ICheckableDisposable where T
 
     public T GetAndDispose()
     {
-        void* handle = ReferenceHelper.Exchange(ref _handle, null);
+        void* handle = Cells.Exchange(ref _handle, null);
         T? result = NativeObject.FromNativePointer<T>(handle, _type);
         if (result is null)
             throw new ObjectDisposedException(nameof(NativeObjectReference<>));
@@ -30,7 +28,7 @@ public unsafe ref struct NativeObjectReference<T> : ICheckableDisposable where T
 
     public void Dispose()
     {
-        void* handle = ReferenceHelper.Exchange(ref _handle, null);
+        void* handle = Cells.Exchange(ref _handle, null);
         if (handle == null)
             return;
 

@@ -56,10 +56,10 @@ public static class OptimisticLock
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static nint Increase(ref nint versionReference) => InterlockedHelper.Increment(ref versionReference);
+    public static nint Increase(ref nint versionReference) => Atomics.Increment(ref versionReference);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static nuint Increase(ref nuint versionReference) => InterlockedHelper.Increment(ref versionReference);
+    public static nuint Increase(ref nuint versionReference) => Atomics.Increment(ref versionReference);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryLeave(ref readonly nint versionReference, ref nint currentVersion)

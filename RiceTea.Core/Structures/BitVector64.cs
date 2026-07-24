@@ -2,8 +2,6 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using RiceTea.Core.Helpers;
-
 namespace RiceTea.Core.Structures;
 
 [StructLayout(LayoutKind.Sequential, Pack = 8)]
@@ -70,7 +68,7 @@ public struct BitVector64 : IComparable<BitVector64>, IEquatable<BitVector64>
         if (index < 0 || index > 63)
             throw new IndexOutOfRangeException();
         ulong mask = 1UL << index;
-        return (InterlockedHelper.Read(ref _data) & mask) == mask;
+        return (Atomics.Read(ref _data) & mask) == mask;
     }
 
     public bool InterlockedGet(uint index)
@@ -78,7 +76,7 @@ public struct BitVector64 : IComparable<BitVector64>, IEquatable<BitVector64>
         if (index > 63)
             throw new IndexOutOfRangeException();
         ulong mask = 1UL << (int)index;
-        return (InterlockedHelper.Read(ref _data) & mask) == mask;
+        return (Atomics.Read(ref _data) & mask) == mask;
     }
 
     public bool InterlockedSet(int index, bool value)
@@ -87,9 +85,9 @@ public struct BitVector64 : IComparable<BitVector64>, IEquatable<BitVector64>
             throw new IndexOutOfRangeException();
         ulong mask = 1UL << index;
         if (value)
-            return (InterlockedHelper.Or(ref _data, mask) & mask) == mask;
+            return (Atomics.Or(ref _data, mask) & mask) == mask;
         else
-            return (InterlockedHelper.And(ref _data, ~mask) & mask) == mask;
+            return (Atomics.And(ref _data, ~mask) & mask) == mask;
     }
 
     public bool InterlockedSet(uint index, bool value)
@@ -98,16 +96,16 @@ public struct BitVector64 : IComparable<BitVector64>, IEquatable<BitVector64>
             throw new IndexOutOfRangeException();
         ulong mask = 1UL << (int)index;
         if (value)
-            return (InterlockedHelper.Or(ref _data, mask) & mask) == mask;
+            return (Atomics.Or(ref _data, mask) & mask) == mask;
         else
-            return (InterlockedHelper.And(ref _data, ~mask) & mask) == mask;
+            return (Atomics.And(ref _data, ~mask) & mask) == mask;
     }
 
     public void InterlockedReset()
-        => InterlockedHelper.Write(ref _data, ulong.MinValue);
+        => Atomics.Write(ref _data, ulong.MinValue);
 
     public void InterlockedSet()
-        => InterlockedHelper.Write(ref _data, ulong.MaxValue);
+        => Atomics.Write(ref _data, ulong.MaxValue);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ulong Exchange(ulong value)
@@ -118,7 +116,7 @@ public struct BitVector64 : IComparable<BitVector64>, IEquatable<BitVector64>
     }
 
     public ulong InterlockedExchange(ulong value)
-        => InterlockedHelper.Exchange(ref _data, value);
+        => Atomics.Exchange(ref _data, value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator ulong(BitVector64 bitVector) => bitVector._data;

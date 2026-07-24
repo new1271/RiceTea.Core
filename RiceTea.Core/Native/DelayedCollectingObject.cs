@@ -3,8 +3,6 @@ using System.Threading;
 
 using InlineMethod;
 
-using RiceTea.Core.Helpers;
-
 namespace RiceTea.Core.Native;
 
 public abstract class DelayedCollectingObject : ICheckableDisposable
@@ -15,9 +13,9 @@ public abstract class DelayedCollectingObject : ICheckableDisposable
 
     public bool IsCreated => Volatile.Read(ref _created) > 0;
 
-    public bool IsInReference => InterlockedHelper.Read(ref _refCount) > 0;
+    public bool IsInReference => Atomics.Read(ref _refCount) > 0;
 
-    public ulong LastDereferenceTime => InterlockedHelper.Read(ref _lastDerefTime);
+    public ulong LastDereferenceTime => Atomics.Read(ref _lastDerefTime);
 
     protected DelayedCollectingObject()
     {
@@ -29,16 +27,16 @@ public abstract class DelayedCollectingObject : ICheckableDisposable
 
     public void AddRef()
     {
-        if (CheckDisposed() || InterlockedHelper.LimitedIncrement(ref _refCount, ulong.MaxValue) != 1 || !TryGenerateObject())
+        if (CheckDisposed() || Atomics.LimitedIncrement(ref _refCount, ulong.MaxValue) != 1 || !TryGenerateObject())
             return;
         DelayedCollector.Instance.AddObject(this);
     }
 
     public void RemoveRef()
     {
-        if (CheckDisposed() || InterlockedHelper.LimitedDecrement(ref _refCount, 0) != 0)
+        if (CheckDisposed() || Atomics.LimitedDecrement(ref _refCount, 0) != 0)
             return;
-        InterlockedHelper.Write(ref _lastDerefTime, NativeMethods.GetTicksForSystem());
+        Atomics.Write(ref _lastDerefTime, NativeMethods.GetTicksForSystem());
     }
 
     internal void RemoveObject()
@@ -51,7 +49,7 @@ public abstract class DelayedCollectingObject : ICheckableDisposable
     [Inline(InlineBehavior.Remove)]
     private bool TryGenerateObject()
     {
-        if (InterlockedHelper.Exchange(ref _created, ulong.MaxValue) != 0)
+        if (Atomics.Exchange(ref _created, ulong.MaxValue) != 0)
             return false;
         GenerateObject();
         return true;
@@ -60,7 +58,7 @@ public abstract class DelayedCollectingObject : ICheckableDisposable
     [Inline(InlineBehavior.Remove)]
     private void TryDestroyObject()
     {
-        if (InterlockedHelper.Exchange(ref _created, 0) == 0)
+        if (Atomics.Exchange(ref _created, 0) == 0)
             return;
         DestroyObject();
     }
@@ -76,7 +74,7 @@ public abstract class DelayedCollectingObject : ICheckableDisposable
     {
         if (IsInReference && disposing)
             return;
-        if (InterlockedHelper.CompareExchange(ref _disposed, 1, 0) == 0)
+        if (Atomics.CompareExchange(ref _disposed, 1, 0) == 0)
             TryDestroyObject();
     }
 

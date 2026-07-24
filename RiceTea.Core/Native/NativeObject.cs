@@ -2,8 +2,6 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.ConstrainedExecution;
 
-using RiceTea.Core.Helpers;
-
 namespace RiceTea.Core.Native;
 
 /// <summary>
@@ -76,7 +74,7 @@ public abstract unsafe partial class NativeObject : CriticalFinalizerObject, ICh
 
     private void DisposeCore(bool disposing)
     {
-        ReferenceType oldState = ReferenceHelper.Exchange(ref _referenceType, ReferenceType.Disposed);
+        ReferenceType oldState = Cells.Exchange(ref _referenceType, ReferenceType.Disposed);
         if (oldState == ReferenceType.Disposed)
             return;
 

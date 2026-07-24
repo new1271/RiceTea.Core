@@ -3,9 +3,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace RiceTea.Core.Helpers;
+using RiceTea.Core.Helpers;
 
-public static partial class InterlockedHelper
+namespace RiceTea.Core;
+
+public static partial class Atomics
 {
     public static partial int Add(ref int location, int value);
     public static partial uint Add(ref uint location, uint value);

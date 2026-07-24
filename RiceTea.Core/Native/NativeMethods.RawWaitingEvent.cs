@@ -19,7 +19,7 @@ partial class NativeMethods
 
         public readonly bool IsAutoReset => _autoReset;
 
-        public readonly bool State => MathHelper.ToBoolean(InterlockedHelper.Read(ref UnsafeHelper.AsRefIn(in _state)));
+        public readonly bool State => MathHelper.ToBoolean(Atomics.Read(ref UnsafeHelper.AsRefIn(in _state)));
 
         public static IntPtr GetWaitingHandleFromEvent(RawWaitingEvent* source)
             => (IntPtr)(&source->_state);
@@ -33,8 +33,8 @@ partial class NativeMethods
             _state = MathHelper.BooleanToUInt32(initialState);
         }
 
-        public bool Set() => InterlockedHelper.Exchange(ref _state, Booleans.TrueInt) == Booleans.FalseInt;
+        public bool Set() => Atomics.Exchange(ref _state, Booleans.TrueInt) == Booleans.FalseInt;
 
-        public bool Reset() => InterlockedHelper.Exchange(ref _state, Booleans.FalseInt) != Booleans.FalseInt;
+        public bool Reset() => Atomics.Exchange(ref _state, Booleans.FalseInt) != Booleans.FalseInt;
     }
 }

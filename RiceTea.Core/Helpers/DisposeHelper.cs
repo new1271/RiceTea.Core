@@ -217,7 +217,7 @@ public static class DisposeHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void NullSwapOrDispose<T>([NotNullIfNotNull(nameof(value))] ref T[]? location, T[]? value) where T : class?, IDisposable
     {
-        T[]? oldObject = InterlockedHelper.CompareExchange(ref location, value, null);
+        T[]? oldObject = Atomics.CompareExchange(ref location, value, null);
         if (oldObject is null || value is null || ReferenceEquals(oldObject, value))
             return;
         foreach (T item in value)

@@ -3,8 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-using RiceTea.Core.Helpers;
-
 namespace RiceTea.Core.Threading;
 
 [StructLayout(LayoutKind.Auto)]
@@ -25,7 +23,7 @@ public ref struct MonitorLockScope : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Dispose()
     {
-        object? syncLock = ReferenceHelper.Exchange(ref _syncLock, null);
+        object? syncLock = Cells.Exchange(ref _syncLock, null);
         if (syncLock is null)
             return;
         Monitor.Exit(syncLock);

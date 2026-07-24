@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
+using RiceTea.Core;
 using RiceTea.Core.Extensions;
 using RiceTea.Core.Helpers;
 using RiceTea.Core.Native;
@@ -95,12 +96,12 @@ partial class ArrayPool<T>
                 goto Global;
 
             ref LocalArray localBucket = ref localBuckets.AsUnsafeRef()[index];
-            if (InterlockedHelper.Read(ref localBucket.Array) is null)
+            if (Atomics.Read(ref localBucket.Array) is null)
                 goto Global;
             localBucket.EnterBarrier();
             try
             {
-                array = ReferenceHelper.Exchange(ref localBucket.Array, null);
+                array = Cells.Exchange(ref localBucket.Array, null);
                 if (array is null)
                     goto Global;
                 Thread.MemoryBarrier();
@@ -128,7 +129,7 @@ partial class ArrayPool<T>
 
         Local:
             ref LocalArray localBucket = ref GetOrCreateLocalArrayBuckets().AsUnsafeRef()[index];
-            if (InterlockedHelper.Read(ref localBucket.Array) is not null)
+            if (Atomics.Read(ref localBucket.Array) is not null)
                 goto Global;
             localBucket.EnterBarrier();
             try
@@ -214,23 +215,23 @@ partial class ArrayPool<T>
             private nuint _barrier;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool TryEnterBarrier() => InterlockedHelper.Exchange(ref _barrier, 1) == 0;
+            public bool TryEnterBarrier() => Atomics.Exchange(ref _barrier, 1) == 0;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void EnterBarrier()
             {
                 ref nuint barrierRef = ref _barrier;
 
-                while (InterlockedHelper.Exchange(ref barrierRef, 1) != 0)
+                while (Atomics.Exchange(ref barrierRef, 1) != 0)
                 {
                     SpinWait spin = new SpinWait();
-                    while (InterlockedHelper.Read(ref barrierRef) != 0)
+                    while (Atomics.Read(ref barrierRef) != 0)
                         spin.SpinOnce();
                 }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void ExitBarrier() => InterlockedHelper.Write(ref _barrier, 0);
+            public void ExitBarrier() => Atomics.Write(ref _barrier, 0);
         }
 
         private sealed class LocalArrayTrimCaller

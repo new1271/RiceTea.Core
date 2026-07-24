@@ -6,6 +6,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
+using RiceTea.Core;
 using RiceTea.Core.Helpers;
 using RiceTea.Core.PolyFills;
 
@@ -1104,7 +1105,7 @@ public sealed partial class Lock
         public override int GetHashCode() => (int)_state;
 
         private static State CompareExchange(Lock lockObj, State toState, State fromState) =>
-            new State(InterlockedHelper.CompareExchange(ref lockObj._state, toState._state, fromState._state));
+            new State(Atomics.CompareExchange(ref lockObj._state, toState._state, fromState._state));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryLock(Lock lockObj)
@@ -1142,7 +1143,7 @@ public sealed partial class Lock
         {
             Debug.Assert(IsLockedMask == 1);
 
-            var state = new State(InterlockedHelper.Decrement(ref lockObj._state));
+            var state = new State(Atomics.Decrement(ref lockObj._state));
             Debug.Assert(!state.IsLocked);
             return state;
         }
@@ -1262,7 +1263,7 @@ public sealed partial class Lock
             // if it's available. If the lock is available, a spinner must acquire the lock along with unregistering itself,
             // because a lock releaser does not wake a waiter when there is a spinner registered.
 
-            var state = new State(InterlockedHelper.Add(ref lockObj._state, Neg(SpinnerCountIncrement)));
+            var state = new State(Atomics.Add(ref lockObj._state, Neg(SpinnerCountIncrement)));
             Debug.Assert(new State(state._state + SpinnerCountIncrement).HasAnySpinners);
 
             while (true)
@@ -1409,7 +1410,7 @@ public sealed partial class Lock
             // when a waiter was signaled but the wake signal has not been observed. If the lock is acquired, the waiter
             // starvation start time is also updated.
 
-            var state = new State(InterlockedHelper.Add(ref lockObj._state, Neg(IsWaiterSignaledToWakeMask)));
+            var state = new State(Atomics.Add(ref lockObj._state, Neg(IsWaiterSignaledToWakeMask)));
             Debug.Assert(new State(state._state + IsWaiterSignaledToWakeMask).IsWaiterSignaledToWake);
 
             bool waiterStartTimeWasRecorded = false;

@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
-using RiceTea.Core.Helpers;
 using RiceTea.Core.Native;
 
 namespace RiceTea.Core.Windows.ObjectModels.Adapters;
@@ -21,11 +20,11 @@ public unsafe struct NativeDataHolder : IDisposable
         _refCount = 1;
     }
 
-    public uint AddRef() => InterlockedHelper.Increment(ref _refCount);
+    public uint AddRef() => Atomics.Increment(ref _refCount);
 
     public uint Release()
     {
-        uint referenceCount = InterlockedHelper.Add(ref _refCount, unchecked((uint)-1));
+        uint referenceCount = Atomics.Add(ref _refCount, unchecked((uint)-1));
         if (referenceCount == 0)
             Dispose();
         return referenceCount;
