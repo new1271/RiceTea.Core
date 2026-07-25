@@ -161,7 +161,7 @@ unsafe partial class NativeMemoryPool
             return;
 
         Global:
-            GetGlobalArrayStack(index).Push(ptr);
+            GetGlobalArrayStack(index)?.Push(ptr);
         }
 
         private void TrimLocals()

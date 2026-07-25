@@ -36,8 +36,11 @@ public unsafe partial class ComObject : NativeObject, IUnknown, IWin32HandleHold
     internal protected static void* GetFunctionPointerOrThrow(void* nativePointer, int offset)
     {
         if (nativePointer == null)
-            throw new NullReferenceException(nameof(nativePointer));
+            Throw();
         return GetFunctionPointerCore(nativePointer, offset);
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static void Throw() => throw new NullReferenceException(nameof(nativePointer));
     }
 
     public ComObject? QueryInterface(in Guid iid, bool throwWhenQueryFailed = true)
