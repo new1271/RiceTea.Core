@@ -278,6 +278,14 @@ partial class ArrayPool<T>
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public PooledList<T> ToPooledList()
+        {
+            ArrayPool<T> pool = _pool ?? ObjectDisposedException.Throw<ArrayPool<T>>(nameof(RentScope));
+            Deconstruct(out T[] array, out int count);
+            return new PooledList<T>(pool, array, count);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Deconstruct(out ArrayPool<T> pool, out T[] array, out int count)
         {
             pool = _pool ?? ObjectDisposedException.Throw<ArrayPool<T>>(nameof(RentScope));

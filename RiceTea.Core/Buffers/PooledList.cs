@@ -20,9 +20,9 @@ public sealed class PooledList<T> : CustomListBase<T>, IDisposable
 
     public PooledList(ArrayPool<T> pool) : this(pool, capacity: 16) { }
 
-    public PooledList(ArrayPool<T> pool, int capacity) : this(pool, pool.Rent(capacity)) { }
+    public PooledList(ArrayPool<T> pool, int capacity) : this(pool, pool.Rent(capacity), initialCount: 0) { }
 
-    private PooledList(ArrayPool<T> pool, T[] array) : base(array, initialCount: 0)
+    internal PooledList(ArrayPool<T> pool, T[] array, int initialCount) : base(array, initialCount)
     {
         _pool = pool;
     }
@@ -49,6 +49,13 @@ public sealed class PooledList<T> : CustomListBase<T>, IDisposable
         Array.Copy(array, newArray, capacity);
         _array = newArray;
         pool.Return(array);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ArrayPool<T>.RentScope ToRentScope()
+    {
+        Deconstruct(out T[] array, out int count);
+        return new ArrayPool<T>.RentScope(_pool, array, count);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
