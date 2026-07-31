@@ -77,7 +77,7 @@ public abstract unsafe partial class NativeMemoryPool
     [Inline(InlineBehavior.Keep, export: true)]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public TypedNativeMemoryBlock<T> Rent<T>() where T : unmanaged
-        => Rent<T>(MinimumMemoryBlockSize);
+        => Rent<T>(MinimumMemoryBlockSize * UnsafeHelper.SizeOf<T>());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public TypedNativeMemoryBlock<T> Rent<T>(int capacity) where T : unmanaged
@@ -85,7 +85,7 @@ public abstract unsafe partial class NativeMemoryPool
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);
         if (capacity == 0)
             return TypedNativeMemoryBlock<T>.Empty;
-        return RentCore<T>(unchecked((nuint)capacity));
+        return RentCore<T>(unchecked((nuint)capacity) * UnsafeHelper.SizeOf<T>());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -94,7 +94,7 @@ public abstract unsafe partial class NativeMemoryPool
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);
         if (capacity == 0)
             return TypedNativeMemoryBlock<T>.Empty;
-        return RentCore<T>(unchecked((nuint)capacity));
+        return RentCore<T>(unchecked((nuint)capacity) * UnsafeHelper.SizeOf<T>());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -103,7 +103,7 @@ public abstract unsafe partial class NativeMemoryPool
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);
         if (capacity == 0)
             return TypedNativeMemoryBlock<T>.Empty;
-        return RentCore<T>(unchecked((nuint)capacity));
+        return RentCore<T>(unchecked((nuint)capacity) * UnsafeHelper.SizeOf<T>());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -111,7 +111,7 @@ public abstract unsafe partial class NativeMemoryPool
     {
         if (capacity == 0)
             return TypedNativeMemoryBlock<T>.Empty;
-        return RentCore<T>(capacity);
+        return RentCore<T>(capacity * UnsafeHelper.SizeOf<T>());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -119,7 +119,7 @@ public abstract unsafe partial class NativeMemoryPool
     {
         if (capacity == 0)
             return TypedNativeMemoryBlock<T>.Empty;
-        return RentCore<T>(unchecked((nuint)capacity));
+        return RentCore<T>(unchecked((nuint)capacity) * UnsafeHelper.SizeOf<T>());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -127,7 +127,7 @@ public abstract unsafe partial class NativeMemoryPool
     {
         if (capacity == 0)
             return TypedNativeMemoryBlock<T>.Empty;
-        return RentCore<T>(capacity);
+        return RentCore<T>(capacity * UnsafeHelper.SizeOf<T>());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
