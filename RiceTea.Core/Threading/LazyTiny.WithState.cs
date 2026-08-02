@@ -7,43 +7,31 @@ using RiceTea.Core.Helpers;
 namespace RiceTea.Core.Threading;
 
 /// <inheritdoc cref="Lazy{T}"/>
-public sealed class LazyTiny<T> where T : class
+public sealed class LazyTiny<T, TState> where T : class
 {
-    private readonly Func<T>? _factory;
+    private readonly Func<TState, T> _factory;
     private readonly Lock? _syncLock;
+    private readonly TState _state;
     private readonly bool _isThreadSafe;
 
     private T? _value;
 
-    /// <inheritdoc cref="Lazy{T}.Lazy(LazyThreadSafetyMode)"/>
-    public LazyTiny(bool isThreadSafe) : this(null, isThreadSafe) { }
-
-    /// <inheritdoc cref="Lazy{T}.Lazy(LazyThreadSafetyMode)"/>
-    public LazyTiny(LazyThreadSafetyMode mode) : this(null, mode) { }
-
     /// <inheritdoc cref="Lazy{T}.Lazy(Func{T})"/>
-    public LazyTiny(Func<T>? factory) : this(factory, false, null) { }
+    public LazyTiny(Func<TState, T> factory, TState state) : this(factory, state, false, null) { }
 
     /// <inheritdoc cref="Lazy{T}.Lazy(Func{T}, bool)"/>
-    public LazyTiny(Func<T>? factory, bool isThreadSafe) : this(factory, isThreadSafe, isThreadSafe ? new Lock() : null) { }
+    public LazyTiny(Func<TState, T> factory, TState state, bool isThreadSafe) : this(factory, state, isThreadSafe, isThreadSafe ? new Lock() : null) { }
 
     /// <inheritdoc cref="Lazy{T}.Lazy(Func{T}, LazyThreadSafetyMode)"/>
-    public LazyTiny(Func<T>? factory, LazyThreadSafetyMode mode) :
-        this(factory, mode != LazyThreadSafetyMode.None, mode == LazyThreadSafetyMode.ExecutionAndPublication ? new Lock() : null)
+    public LazyTiny(Func<TState, T> factory, TState state, LazyThreadSafetyMode mode) :
+        this(factory, state, mode != LazyThreadSafetyMode.None, mode == LazyThreadSafetyMode.ExecutionAndPublication ? new Lock() : null)
     { }
 
-    public LazyTiny(T value)
-    {
-        _isThreadSafe = true;
-        _syncLock = null;
-        _factory = null;
-        _value = value;
-    }
-
-    private LazyTiny(Func<T>? factory, bool isThreadSafe, Lock? syncLock)
+    private LazyTiny(Func<TState, T> factory, TState state, bool isThreadSafe, Lock? syncLock)
     {
         _isThreadSafe = isThreadSafe;
         _factory = factory;
+        _state = state;
         _syncLock = syncLock;
         _value = null;
     }
@@ -61,7 +49,7 @@ public sealed class LazyTiny<T> where T : class
         get
         {
             T? result = _value;
-            return result ?? LazyTinyHelper.InitializeAndReturn(ref _value, _factory, _isThreadSafe, _syncLock);
+            return result ?? LazyTinyHelper.InitializeAndReturn(ref _value, _factory, _state, _isThreadSafe, _syncLock);
         }
     }
 
