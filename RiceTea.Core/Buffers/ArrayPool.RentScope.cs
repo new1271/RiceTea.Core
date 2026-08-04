@@ -77,7 +77,7 @@ partial class ArrayPool<T>
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly ref readonly T GetReferenceOfFirstElement()
+        public readonly ref T GetReferenceOfFirstElement()
             => ref UnsafeHelper.GetArrayDataReference(NullSafetyHelper.ThrowIfNull(_array));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
