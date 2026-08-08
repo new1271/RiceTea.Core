@@ -164,27 +164,27 @@ public static class DisposeHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SwapDisposeInterlocked<T>([NotNullIfNotNull(nameof(value))] ref T? location, T? value = null) where T : class, IDisposable
+    public static void SwapDisposeAtomic<T>([NotNullIfNotNull(nameof(value))] ref T? location, T? value = null) where T : class, IDisposable
     {
-        T? oldObject = Interlocked.Exchange(ref location, value);
+        T? oldObject = Atomics.Exchange(ref location, value);
         if (ReferenceEquals(oldObject, value) || oldObject is null)
             return;
         oldObject.Dispose();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SwapDisposeInterlockedWeak<T>([NotNullIfNotNull(nameof(value))] ref T? location, T? value = null) where T : class
+    public static void SwapDisposeAtomicWeak<T>([NotNullIfNotNull(nameof(value))] ref T? location, T? value = null) where T : class
     {
-        T? oldObject = Interlocked.Exchange(ref location, value);
+        T? oldObject = Atomics.Exchange(ref location, value);
         if (ReferenceEquals(oldObject, value) || oldObject is not IDisposable disposable)
             return;
         disposable.Dispose();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SwapDisposeInterlocked<T>([NotNullIfNotNull(nameof(value))] ref T[]? location, T[]? value = null) where T : class?, IDisposable?
+    public static void SwapDisposeAtomic<T>([NotNullIfNotNull(nameof(value))] ref T[]? location, T[]? value = null) where T : class?, IDisposable?
     {
-        T[]? disposingObject = Interlocked.Exchange(ref location, value);
+        T[]? disposingObject = Atomics.Exchange(ref location, value);
         if (disposingObject is null)
             return;
         for (int i = 0, count = disposingObject.Length; i < count; i++)
@@ -194,9 +194,9 @@ public static class DisposeHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SwapDisposeInterlockedWeak<T>([NotNullIfNotNull(nameof(value))] ref T[]? location, T[]? value = null) where T : class?
+    public static void SwapDisposeAtomicWeak<T>([NotNullIfNotNull(nameof(value))] ref T[]? location, T[]? value = null) where T : class?
     {
-        T[]? disposingObject = Interlocked.Exchange(ref location, value);
+        T[]? disposingObject = Atomics.Exchange(ref location, value);
         if (disposingObject is null)
             return;
         for (int i = 0, count = disposingObject.Length; i < count; i++)
@@ -227,7 +227,7 @@ public static class DisposeHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void NullSwapOrDisposeWeak<T>([NotNullIfNotNull(nameof(value))] ref T? location, T? value) where T : class
     {
-        T? oldObject = Interlocked.CompareExchange(ref location, value, null);
+        T? oldObject = Atomics.CompareExchange(ref location, value, null);
         if (oldObject is null || ReferenceEquals(oldObject, value))
             return;
         (value as IDisposable)?.Dispose();
@@ -236,7 +236,7 @@ public static class DisposeHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void NullSwapOrDisposeWeak<T>([NotNullIfNotNull(nameof(value))] ref T[]? location, T[]? value) where T : class
     {
-        T[]? oldObject = Interlocked.CompareExchange(ref location, value, null);
+        T[]? oldObject = Atomics.CompareExchange(ref location, value, null);
         if (oldObject is null || ReferenceEquals(oldObject, value))
             return;
         foreach (T item in value!)

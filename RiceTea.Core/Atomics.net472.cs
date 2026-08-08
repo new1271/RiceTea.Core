@@ -1,6 +1,5 @@
 #if NET472_OR_GREATER
 using System;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -12,22 +11,6 @@ namespace RiceTea.Core;
 
 partial class Atomics
 {
-    private static readonly unsafe delegate* managed<ref int, int, int> _getAndAdd32Func;
-    private static readonly unsafe delegate* managed<ref long, long, long> _getAndAdd64Func;
-
-    unsafe static Atomics()
-    {
-        Type type = typeof(Interlocked);
-        _getAndAdd32Func = (delegate*<ref int, int, int>)ReflectionHelper.GetMethodPointer(type, "ExchangeAdd", [typeof(int).MakeByRefType(), typeof(int)],
-            typeof(int), BindingFlags.Static | BindingFlags.NonPublic);
-        _getAndAdd64Func = (delegate*<ref long, long, long>)ReflectionHelper.GetMethodPointer(type, "ExchangeAdd", [typeof(long).MakeByRefType(), typeof(long)],
-            typeof(long), BindingFlags.Static | BindingFlags.NonPublic);
-        if (_getAndAdd32Func is null)
-            _getAndAdd32Func = &FallbackGetAndAdd;
-        if (_getAndAdd64Func is null)
-            _getAndAdd64Func = &FallbackGetAndAdd;
-    }
-
     [Inline(InlineBehavior.Keep, export: true)]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static partial int Add(ref int location, int value) => Interlocked.Add(ref location, value);
@@ -54,7 +37,7 @@ partial class Atomics
             {
                 sizeof(int) => unchecked(Interlocked.Add(ref UnsafeHelper.As<nint, int>(ref location), (int)value)),
                 sizeof(long) => unchecked((nint)Interlocked.Add(ref UnsafeHelper.As<nint, long>(ref location), value)),
-                _ => throw new PlatformNotSupportedException()
+                _ => PlatformNotSupportedException.Throw<nint>()
             }
         };
 
@@ -68,83 +51,27 @@ partial class Atomics
             {
                 sizeof(int) => unchecked((nuint)Interlocked.Add(ref UnsafeHelper.As<nuint, int>(ref location), (int)value)),
                 sizeof(long) => unchecked((nuint)Interlocked.Add(ref UnsafeHelper.As<nuint, long>(ref location), (long)value)),
-                _ => throw new PlatformNotSupportedException()
+                _ => PlatformNotSupportedException.Throw<nuint>()
             }
         };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial int GetAndAdd(ref int location, int value)
-    {
-        unsafe
-        {
-            return _getAndAdd32Func(ref location, value);
-        }
-    }
+    public static partial int GetAndAdd(ref int location, int value) => Add(ref location, value) - value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial uint GetAndAdd(ref uint location, uint value)
-    {
-        unsafe
-        {
-            return unchecked((uint)_getAndAdd32Func(ref UnsafeHelper.As<uint, int>(ref location), (int)value));
-        }
-    }
+    public static partial uint GetAndAdd(ref uint location, uint value) => Add(ref location, value) - value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial long GetAndAdd(ref long location, long value)
-    {
-        unsafe
-        {
-            return _getAndAdd64Func(ref location, value);
-        }
-    }
+    public static partial long GetAndAdd(ref long location, long value) => Add(ref location, value) - value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial ulong GetAndAdd(ref ulong location, ulong value)
-    {
-        unsafe
-        {
-            return unchecked((ulong)_getAndAdd64Func(ref UnsafeHelper.As<ulong, long>(ref location), (long)value));
-        }
-    }
+    public static partial ulong GetAndAdd(ref ulong location, ulong value) => Add(ref location, value) - value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial nint GetAndAdd(ref nint location, nint value)
-    {
-        unsafe
-        {
-            return UnsafeHelper.PointerSizeConstant switch
-            {
-                sizeof(int) => unchecked(_getAndAdd32Func(ref UnsafeHelper.As<nint, int>(ref location), (int)value)),
-                sizeof(long) => unchecked((nint)_getAndAdd64Func(ref UnsafeHelper.As<nint, long>(ref location), value)),
-                _ => UnsafeHelper.PointerSize switch
-                {
-                    sizeof(int) => unchecked(_getAndAdd32Func(ref UnsafeHelper.As<nint, int>(ref location), (int)value)),
-                    sizeof(long) => unchecked((nint)_getAndAdd64Func(ref UnsafeHelper.As<nint, long>(ref location), value)),
-                    _ => throw new PlatformNotSupportedException()
-                }
-            };
-        }
-    }
+    public static partial nint GetAndAdd(ref nint location, nint value) => Add(ref location, value) - value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial nuint GetAndAdd(ref nuint location, nuint value)
-    {
-        unsafe
-        {
-            return UnsafeHelper.PointerSizeConstant switch
-            {
-                sizeof(int) => unchecked((nuint)_getAndAdd32Func(ref UnsafeHelper.As<nuint, int>(ref location), (int)value)),
-                sizeof(long) => unchecked((nuint)_getAndAdd64Func(ref UnsafeHelper.As<nuint, long>(ref location), (long)value)),
-                _ => UnsafeHelper.PointerSize switch
-                {
-                    sizeof(int) => unchecked((nuint)_getAndAdd32Func(ref UnsafeHelper.As<nuint, int>(ref location), (int)value)),
-                    sizeof(long) => unchecked((nuint)_getAndAdd64Func(ref UnsafeHelper.As<nuint, long>(ref location), (long)value)),
-                    _ => throw new PlatformNotSupportedException()
-                }
-            };
-        }
-    }
+    public static partial nuint GetAndAdd(ref nuint location, nuint value) => Add(ref location, value) - value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static partial int Or(ref int location, int value) => OrCore(ref location, value);

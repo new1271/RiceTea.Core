@@ -88,7 +88,7 @@ public sealed class LazyTiny<T> where T : class
     public void Reset()
     {
         if (_isThreadSafe)
-            DisposeHelper.SwapDisposeInterlockedWeak(ref _value);
+            DisposeHelper.SwapDisposeAtomicWeak(ref _value);
         else
             DisposeHelper.SwapDisposeWeak(ref _value);
     }
