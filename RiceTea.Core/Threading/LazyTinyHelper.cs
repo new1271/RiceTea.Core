@@ -8,7 +8,7 @@ namespace RiceTea.Core.Threading;
 
 internal static class LazyTinyHelper
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static T InitializeAndReturn<T>(ref T? location, Func<T>? factory, bool threadSafe, Lock? syncLock) where T : class
     {
         T? result;
