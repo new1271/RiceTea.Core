@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -22,6 +23,10 @@ partial class StateTiny
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly T GetValueUnsafe() => _base.GetValueUnsafe();
+
+        [UnscopedRef]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly ref readonly T GetValueReferenceUnsafe() => ref _base.GetValueReferenceUnsafe();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Lock GetWriterLock() 

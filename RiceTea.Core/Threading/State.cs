@@ -20,6 +20,9 @@ public abstract class State<T> where T : struct
     public T GetValueUnsafe() => _value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly T GetValueReferenceUnsafe() => ref _value;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected T GetValue() => StateHelper.GetValue(in _value, in _version);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

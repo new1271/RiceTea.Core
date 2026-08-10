@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -15,6 +16,10 @@ partial class StateTiny
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly T GetValueUnsafe() => _value;
+
+        [UnscopedRef]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly ref readonly T GetValueReferenceUnsafe() => ref _value;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly T GetValue() => StateHelper.GetValue(in _value, in _version);
