@@ -1,7 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using InlineMethod;
+
+using RiceTea.Core.Buffers;
+using RiceTea.Core.Extensions;
 
 #pragma warning disable CS8500
 
@@ -106,5 +110,56 @@ public static partial class ArrayHelper
             int index = SequenceHelper.IndexOfExclude((nint*)ptr + startIndex, count, 0);
             return index == -1 ? null : array[startIndex + index];
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T[] CopyItemsToArray<T, TEnumerable>(TEnumerable elements) where T : class? where TEnumerable : IEnumerable<T>
+    {
+        using ArrayPool<T>.RentScope scope = ArrayPool<T>.Shared.EnterRentScopeAndCapture(elements);
+        int count = scope.Count;
+        if (count <= 0)
+            return Array.Empty<T>();
+        T[] result = new T[count];
+        CopyItemsToArrayCore(ref UnsafeHelper.GetArrayDataReference(result), in scope.GetReferenceOfFirstElement(), (nuint)scope.Count);
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T[] CopyItemsToArrayUnsafe<T>(ref readonly T elementsRef, int count)
+    {
+        if (count <= 0)
+            return Array.Empty<T>();
+        T[] result = new T[count];
+        CopyItemsToArrayCore(ref UnsafeHelper.GetArrayDataReference(result), in elementsRef, MathHelper.MakeUnsigned(count));
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void CopyItemsToArrayCore<T>(ref T destination, ref readonly T sourceArrayRef, nuint length)
+    {
+        int i;
+        for (i = 0; length >= 4; length -= 4, i += 4)
+        {
+            SetValueWithOffset(ref destination, in sourceArrayRef, i);
+            SetValueWithOffset(ref destination, in sourceArrayRef, i + 1);
+            SetValueWithOffset(ref destination, in sourceArrayRef, i + 2);
+            SetValueWithOffset(ref destination, in sourceArrayRef, i + 3);
+        }
+        switch (length)
+        {
+            case 3:
+                SetValueWithOffset(ref destination, in sourceArrayRef, i + 2);
+                goto case 2;
+            case 2:
+                SetValueWithOffset(ref destination, in sourceArrayRef, i + 1);
+                goto case 1;
+            case 1:
+                SetValueWithOffset(ref destination, in sourceArrayRef, i);
+                break;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static void SetValueWithOffset(ref T destination, ref readonly T sourceArrayRef, int offset)
+            => UnsafeHelper.AddTypedOffset(ref destination, offset) = UnsafeHelper.AddTypedOffsetAsReadOnly(in sourceArrayRef, offset);
     }
 }
