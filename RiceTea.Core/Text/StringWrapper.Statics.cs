@@ -143,6 +143,14 @@ partial class StringWrapper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static StringWrapper CreateUtf16String(char character, nuint length)
+    {
+        if (length <= 0)
+            return Empty;
+        return Utf16String.Create(character, length);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe StringWrapper CreateUtf16String(char* ptr)
     {
         nuint length = FindLength(ptr);
@@ -168,11 +176,19 @@ partial class StringWrapper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe StringWrapper CreateLatin1String(byte character, int length)
+    public static StringWrapper CreateLatin1String(byte character, int length)
     {
         if (length <= 0)
             return Empty;
         return Latin1String.Create(character, (nuint)length);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static StringWrapper CreateLatin1String(byte character, nuint length)
+    {
+        if (length <= 0)
+            return Empty;
+        return Latin1String.Create(character, length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -201,11 +217,19 @@ partial class StringWrapper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe StringWrapper CreateAsciiString(byte character, int length)
+    public static StringWrapper CreateAsciiString(byte character, int length)
     {
         if (length <= 0)
             return Empty;
         return AsciiString.Create(character, (nuint)length);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static StringWrapper CreateAsciiString(byte character, nuint length)
+    {
+        if (length <= 0)
+            return Empty;
+        return AsciiString.Create(character, length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
