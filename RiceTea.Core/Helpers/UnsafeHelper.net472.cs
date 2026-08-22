@@ -8,8 +8,6 @@ using InlineIL;
 
 using InlineMethod;
 
-using LocalsInit;
-
 #pragma warning disable CS8500
 
 namespace RiceTea.Core.Helpers;
@@ -655,7 +653,7 @@ public static unsafe partial class UnsafeHelper
         return ref IL.ReturnRef<T>();
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static partial void SkipInit<T>(out T value)
     {

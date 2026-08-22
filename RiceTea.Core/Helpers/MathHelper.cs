@@ -5,8 +5,6 @@ using InlineIL;
 
 using InlineMethod;
 
-using LocalsInit;
-
 namespace RiceTea.Core.Helpers;
 
 public static partial class MathHelper
@@ -525,7 +523,7 @@ public static partial class MathHelper
         return IL.Return<T>();
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     private static T DivRemSoftwareFallback<T>(T a, T b, out T rem) where T : unmanaged
     {
         T quantity = UnsafeHelper.Divide(a, b);
@@ -533,7 +531,7 @@ public static partial class MathHelper
         return quantity;
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     private static T DivRemUnsignedSoftwareFallback<T>(T a, T b, out T rem) where T : unmanaged
     {
         T quantity = UnsafeHelper.DivideUnsigned(a, b);

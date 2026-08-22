@@ -2,8 +2,6 @@ using System.Runtime.CompilerServices;
 
 using InlineMethod;
 
-using LocalsInit;
-
 using RiceTea.Core.Helpers;
 
 namespace RiceTea.Core.Text;
@@ -47,7 +45,7 @@ internal static partial class Utf16StringHelper
     public static bool IsSurrogateCharacter(char c)
         => c >= SurrogateStart && c <= SurrogateEnd;
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool IsWhiteSpaceCharacter(char c)
     {

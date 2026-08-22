@@ -5,15 +5,13 @@ using System.Runtime.CompilerServices;
 
 using InlineMethod;
 
-using LocalsInit;
-
 using RiceTea.Core.Structures;
 
 namespace RiceTea.Core.Helpers;
 
 partial class SequenceHelper
 {
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     private static partial class FastCore
     {
         [Inline(InlineBehavior.Remove)]
@@ -31,15 +29,15 @@ partial class SequenceHelper
         public static Unit ThrowDivideByZeroException() => throw new DivideByZeroException();
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     private static partial class FastCore<T> where T : unmanaged { }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     private static partial class FastCoreOfBoolean { }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     private static partial class SlowCore { }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     private static partial class SlowCore<T> { }
 }

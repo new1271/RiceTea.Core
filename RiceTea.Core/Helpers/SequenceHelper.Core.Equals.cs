@@ -3,8 +3,6 @@ using System.Runtime.CompilerServices;
 
 using InlineMethod;
 
-using LocalsInit;
-
 namespace RiceTea.Core.Helpers;
 
 #pragma warning disable CS8500
@@ -12,7 +10,7 @@ partial class SequenceHelper
 {
     unsafe partial class FastCore
     {
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Equals(byte* ptr, byte* ptr2, nuint length)
         {
@@ -21,7 +19,7 @@ partial class SequenceHelper
             return ScalarizedEquals(ref ptr, ref ptr2, ref length);
         }
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static partial bool VectorizedEquals(byte* ptr, byte* ptr2, nuint length);
 
@@ -65,7 +63,7 @@ partial class SequenceHelper
 
     unsafe partial class FastCore<T>
     {
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool RangedAddAndEquals(T* ptr, T* ptr2, nuint length, T lowerBound, T higherBound, T valueToAddInRange)
         {
@@ -74,7 +72,7 @@ partial class SequenceHelper
             return ScalarizedRangedAddAndEquals(ref ptr, ref ptr2, ref length, lowerBound, higherBound, valueToAddInRange);
         }
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static partial bool VectorizedRangedAddAndEquals(T* ptr, T* ptr2, nuint length, T lowerBound, T higherBound, T valueToAddInRange);
 

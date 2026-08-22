@@ -1,9 +1,8 @@
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
-
-using LocalsInit;
 
 using RiceTea.Core.Buffers;
 using RiceTea.Core.Native;
@@ -53,7 +52,7 @@ internal sealed class Latin1StreamReader : AsciiBasedStreamReader
         return unchecked((char)buffer[currentPos]);
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     protected override unsafe string? ReadLineCore(byte[] buffer)
     {
         if (CheckEndOfStream(fullyCheck: true))
@@ -115,7 +114,7 @@ internal sealed class Latin1StreamReader : AsciiBasedStreamReader
         return builder.ToString();
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     protected override unsafe string ReadToEndCore(byte[] buffer)
     {
         if (CheckEndOfStream(fullyCheck: true))

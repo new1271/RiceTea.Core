@@ -3,8 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Security;
 
-using LocalsInit;
-
 using RiceTea.Core.Helpers;
 using RiceTea.Core.Native;
 using RiceTea.Core.Windows.Internals;
@@ -52,7 +50,7 @@ public unsafe class ShellItem : ComObject
         return true;
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     private static int TryCreateCore(string path, out void* result)
         => Shell32.SHCreateItemFromParsingName(path, null, IID_ShellItem, UnsafeHelper.AsPointerOut(out result));
 

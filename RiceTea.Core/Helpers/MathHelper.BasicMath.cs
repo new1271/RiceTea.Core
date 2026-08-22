@@ -3,8 +3,6 @@ using System.Runtime.CompilerServices;
 
 using InlineMethod;
 
-using LocalsInit;
-
 namespace RiceTea.Core.Helpers;
 
 partial class MathHelper
@@ -31,7 +29,7 @@ partial class MathHelper
 
     [Inline(InlineBehavior.Keep, export: true)]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     public static nuint CheckedAdd(nuint a, nuint b)
         => UnsafeHelper.PointerSizeConstant switch
         {

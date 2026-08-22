@@ -1,6 +1,5 @@
 using System;
-
-using LocalsInit;
+using System.Runtime.CompilerServices;
 
 using RiceTea.Core.Buffers;
 using RiceTea.Core.Helpers;
@@ -32,7 +31,7 @@ public unsafe sealed class Win32Stream : Win32SequentialStream, IWin32Stream
         _End
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     public ulong Seek(long dlibMove, StreamSeekType dwOrigin)
     {
         ulong result;
@@ -165,7 +164,7 @@ public unsafe sealed class Win32Stream : Win32SequentialStream, IWin32Stream
         ThrowHelper.ThrowExceptionForHR(hr);
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     public StructuredStorageStat Stat(StructuredStorageStatFlags grfStatFlag)
     {
         StructuredStorageStat stat;

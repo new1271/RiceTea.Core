@@ -6,7 +6,6 @@ using System.Threading;
 using InlineMethod;
 
 using RiceTea.Core.Extensions;
-using RiceTea.Core.Helpers;
 
 namespace RiceTea.Core.Native;
 

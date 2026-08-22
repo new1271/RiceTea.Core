@@ -1,7 +1,5 @@
 using System.Runtime.CompilerServices;
 
-using LocalsInit;
-
 using RiceTea.Core.Helpers;
 using RiceTea.Core.Native;
 
@@ -44,7 +42,7 @@ internal static class AsciiLikeStringHelper
         }
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool IsWhiteSpaceCharacter(byte c)
     {

@@ -5,13 +5,11 @@ using System.Security;
 
 using InlineMethod;
 
-using LocalsInit;
-
 using RiceTea.Core.Helpers;
 
 namespace RiceTea.Core.Structures;
 
-[LocalsInit(false)]
+[SkipLocalsInit]
 [StructLayout(LayoutKind.Sequential, Pack = 8)]
 public unsafe struct BitVector256 : IComparable<BitVector256>, IEquatable<BitVector256>
 {

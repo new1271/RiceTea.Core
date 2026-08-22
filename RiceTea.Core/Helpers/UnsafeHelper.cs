@@ -5,13 +5,11 @@ using InlineIL;
 
 using InlineMethod;
 
-using LocalsInit;
-
 #pragma warning disable CS8500
 
 namespace RiceTea.Core.Helpers;
 
-[LocalsInit(false)]
+[SkipLocalsInit]
 public static unsafe partial class UnsafeHelper
 {
     public const int PointerSizeConstant_Indeterminate = 0;

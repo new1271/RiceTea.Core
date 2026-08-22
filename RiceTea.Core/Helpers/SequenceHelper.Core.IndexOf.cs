@@ -4,8 +4,6 @@ using System.Runtime.CompilerServices;
 
 using InlineMethod;
 
-using LocalsInit;
-
 #pragma warning disable CS8500
 
 namespace RiceTea.Core.Helpers;
@@ -62,62 +60,62 @@ partial class SequenceHelper
         public static T* PointerIndexOfLessThanOrEquals(T* ptr, nuint length, T value)
             => PointerIndexOfCore(ref ptr, ref length, value, CompareMethod.LessThanOrEquals, accurateResult: true);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T* VectorizedContains(T* ptr, nuint length, T value)
             => VectorizedPointerIndexOfCore(ref ptr, ref length, value, CompareMethod.Include, accurateResult: false);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T* VectorizedContainsExclude(T* ptr, nuint length, T value)
             => VectorizedPointerIndexOfCore(ref ptr, ref length, value, CompareMethod.Exclude, accurateResult: false);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T* VectorizedContainsGreaterThan(T* ptr, nuint length, T value)
             => VectorizedPointerIndexOfCore(ref ptr, ref length, value, CompareMethod.GreaterThan, accurateResult: false);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T* VectorizedContainsLessThan(T* ptr, nuint length, T value)
             => VectorizedPointerIndexOfCore(ref ptr, ref length, value, CompareMethod.LessThan, accurateResult: false);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T* VectorizedContainsGreaterThanOrEquals(T* ptr, nuint length, T value)
             => VectorizedPointerIndexOfCore(ref ptr, ref length, value, CompareMethod.GreaterThanOrEquals, accurateResult: false);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T* VectorizedContainsLessThanOrEquals(T* ptr, nuint length, T value)
             => VectorizedPointerIndexOfCore(ref ptr, ref length, value, CompareMethod.LessThanOrEquals, accurateResult: false);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T* VectorizedPointerIndexOf(T* ptr, nuint length, T value)
             => VectorizedPointerIndexOfCore(ref ptr, ref length, value, CompareMethod.Include, accurateResult: true);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T* VectorizedPointerIndexOfExclude(T* ptr, nuint length, T value)
             => VectorizedPointerIndexOfCore(ref ptr, ref length, value, CompareMethod.Exclude, accurateResult: true);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T* VectorizedPointerIndexOfGreaterThan(T* ptr, nuint length, T value)
             => VectorizedPointerIndexOfCore(ref ptr, ref length, value, CompareMethod.GreaterThan, accurateResult: true);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T* VectorizedPointerIndexOfLessThan(T* ptr, nuint length, T value)
             => VectorizedPointerIndexOfCore(ref ptr, ref length, value, CompareMethod.LessThan, accurateResult: true);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T* VectorizedPointerIndexOfGreaterThanOrEquals(T* ptr, nuint length, T value)
             => VectorizedPointerIndexOfCore(ref ptr, ref length, value, CompareMethod.GreaterThanOrEquals, accurateResult: true);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T* VectorizedPointerIndexOfLessThanOrEquals(T* ptr, nuint length, T value)
             => VectorizedPointerIndexOfCore(ref ptr, ref length, value, CompareMethod.LessThanOrEquals, accurateResult: true);
@@ -140,7 +138,7 @@ partial class SequenceHelper
             return ScalarizedPointerIndexOfCore(ref ptr, ref length, value, method, accurateResult);
         }
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [Inline(InlineBehavior.Remove)]
         private static partial T* VectorizedPointerIndexOfCore(ref T* ptr, ref nuint length, T value, [InlineParameter] CompareMethod method, [InlineParameter] bool accurateResult);
 

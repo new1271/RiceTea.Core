@@ -4,8 +4,6 @@ using System.Runtime.CompilerServices;
 
 using InlineMethod;
 
-using LocalsInit;
-
 namespace RiceTea.Core.Helpers;
 
 partial class SequenceHelper
@@ -390,32 +388,32 @@ partial class SequenceHelper
         public static void ReplaceLessThanOrEquals(T* ptr, nuint length, T filter, T replacement)
             => ReplaceCore(ref ptr, ref length, filter, replacement, CompareMethod.LessThanOrEquals);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void VectorizedReplace(T* ptr, nuint length, T filter, T replacement)
             => VectorizedReplaceCore(ref ptr, ref length, filter, replacement, CompareMethod.Include);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void VectorizedReplaceExclude(T* ptr, nuint length, T filter, T replacement)
             => VectorizedReplaceCore(ref ptr, ref length, filter, replacement, CompareMethod.Exclude);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void VectorizedReplaceGreaterThan(T* ptr, nuint length, T filter, T replacement)
             => VectorizedReplaceCore(ref ptr, ref length, filter, replacement, CompareMethod.GreaterThan);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void VectorizedReplaceLessThan(T* ptr, nuint length, T filter, T replacement)
             => VectorizedReplaceCore(ref ptr, ref length, filter, replacement, CompareMethod.LessThan);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void VectorizedReplaceGreaterThanOrEquals(T* ptr, nuint length, T filter, T replacement)
             => VectorizedReplaceCore(ref ptr, ref length, filter, replacement, CompareMethod.GreaterThanOrEquals);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void VectorizedReplaceLessThanOrEquals(T* ptr, nuint length, T filter, T replacement)
             => VectorizedReplaceCore(ref ptr, ref length, filter, replacement, CompareMethod.LessThanOrEquals);

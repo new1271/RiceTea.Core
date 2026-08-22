@@ -2,8 +2,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
-using LocalsInit;
-
 using RiceTea.Core.Helpers;
 
 namespace RiceTea.Core.Text;
@@ -22,7 +20,7 @@ partial class InternalSequenceHelper
                    (typeof(T) == typeof(float)) ||
                    (typeof(T) == typeof(double));
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     private static unsafe partial int VectorizedCompareTo<T>(T* ptrA, T* ptrB, nuint length) where T : unmanaged
     {
         T* ptrEnd = ptrA + length;

@@ -3,8 +3,6 @@ using System.Runtime.CompilerServices;
 
 using InlineMethod;
 
-using LocalsInit;
-
 using RiceTea.Core.Structures;
 
 #pragma warning disable CS8500
@@ -23,12 +21,12 @@ partial class SequenceHelper
         public static Unit Not(T* ptr, nuint length)
             => UnaryOperationCore(ref ptr, ref length, UnaryOperatorType.Not);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedIdentity(T* ptr, nuint length)
             => VectorizedUnaryOperationCore(ref ptr, ref length, UnaryOperatorType.Identity);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedOr(T* ptr, nuint length)
             => VectorizedUnaryOperationCore(ref ptr, ref length, UnaryOperatorType.Not);
@@ -98,12 +96,12 @@ partial class SequenceHelper
         public static Unit Not(bool* ptr, nuint length)
             => UnaryOperationCore(ref ptr, ref length, UnaryOperatorType.Not);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedIdentity(bool* ptr, nuint length)
             => VectorizedUnaryOperationCore(ref ptr, ref length, UnaryOperatorType.Identity);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedNot(bool* ptr, nuint length)
             => VectorizedUnaryOperationCore(ref ptr, ref length, UnaryOperatorType.Not);

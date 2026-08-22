@@ -3,8 +3,6 @@ using System.Runtime.CompilerServices;
 
 using InlineMethod;
 
-using LocalsInit;
-
 using RiceTea.Core.Structures;
 
 #pragma warning disable CS8500
@@ -55,52 +53,52 @@ partial class SequenceHelper
         public static Unit Max(T* ptr, nuint length, T value)
             => BinaryOperationCore(ref ptr, ref length, value, BinaryOperatorType.Max);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedRight(T* ptr, nuint length, T value)
             => VectorizedBinaryOperationCore(ref ptr, ref length, value, BinaryOperatorType.Right);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedOr(T* ptr, nuint length, T value)
             => VectorizedBinaryOperationCore(ref ptr, ref length, value, BinaryOperatorType.Or);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedAnd(T* ptr, nuint length, T value)
             => VectorizedBinaryOperationCore(ref ptr, ref length, value, BinaryOperatorType.And);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedXor(T* ptr, nuint length, T value)
             => VectorizedBinaryOperationCore(ref ptr, ref length, value, BinaryOperatorType.Xor);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedAdd(T* ptr, nuint length, T value)
             => VectorizedBinaryOperationCore(ref ptr, ref length, value, BinaryOperatorType.Add);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedSubtract(T* ptr, nuint length, T value)
             => VectorizedBinaryOperationCore(ref ptr, ref length, value, BinaryOperatorType.Subtract);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedMultiply(T* ptr, nuint length, T value)
             => VectorizedBinaryOperationCore(ref ptr, ref length, value, BinaryOperatorType.Multiply);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedDivide(T* ptr, nuint length, T value)
             => VectorizedBinaryOperationCore(ref ptr, ref length, value, BinaryOperatorType.Divide);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedMin(T* ptr, nuint length, T value)
             => VectorizedBinaryOperationCore(ref ptr, ref length, value, BinaryOperatorType.Min);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedMax(T* ptr, nuint length, T value)
             => VectorizedBinaryOperationCore(ref ptr, ref length, value, BinaryOperatorType.Max);
@@ -208,27 +206,27 @@ partial class SequenceHelper
         public static Unit Divide(bool* ptr, nuint length, bool value)
             => value ? Left(ptr, length, value) : FastCore.ThrowDivideByZeroException();
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedLeft(bool* ptr, nuint length, bool value)
             => VectorizedBinaryOperationCore(ref ptr, ref length, value, BinaryOperatorType.Left);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedRight(bool* ptr, nuint length, bool value)
             => VectorizedBinaryOperationCore(ref ptr, ref length, value, BinaryOperatorType.Right);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedOr(bool* ptr, nuint length, bool value)
             => VectorizedBinaryOperationCore(ref ptr, ref length, value, BinaryOperatorType.Or);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedAnd(bool* ptr, nuint length, bool value)
             => VectorizedBinaryOperationCore(ref ptr, ref length, value, BinaryOperatorType.And);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Unit VectorizedXor(bool* ptr, nuint length, bool value)
             => VectorizedBinaryOperationCore(ref ptr, ref length, value, BinaryOperatorType.Xor);

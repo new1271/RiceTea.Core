@@ -1,6 +1,5 @@
 using System.Linq;
-
-using LocalsInit;
+using System.Runtime.CompilerServices;
 
 using RiceTea.Core.Extensions;
 using RiceTea.Core.Helpers;
@@ -160,7 +159,7 @@ partial class Utf8String
         return ContainsCoreFallbackFast(value, valueLength);
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     private unsafe bool ContainsCoreFallbackFast(char value)
     {
         byte* buffer = stackalloc byte[3];

@@ -4,8 +4,6 @@ using System.Runtime.CompilerServices;
 
 using InlineMethod;
 
-using LocalsInit;
-
 using RiceTea.Core.Buffers;
 using RiceTea.Core.Helpers;
 using RiceTea.Core.Text;
@@ -42,7 +40,7 @@ public static partial class StringExtensions
             return SplitCore(_this, ptr, _this.Length, ptrSeparator, separator.Length, options);
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static unsafe string[] SplitCore(string _this, char* ptr, int length, char separator, StringSplitOptions options)
     {
@@ -73,7 +71,7 @@ public static partial class StringExtensions
         return result;
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static unsafe string[] SplitCore(string _this, char* ptr, int length, char* separator, int separatorLength, StringSplitOptions options)
     {

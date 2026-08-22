@@ -4,8 +4,6 @@ using System.Security;
 
 using InlineMethod;
 
-using LocalsInit;
-
 using RiceTea.Core.Helpers;
 using RiceTea.Core.Native;
 using RiceTea.Core.Windows.Internals;
@@ -92,7 +90,7 @@ public unsafe sealed class FileDialog : ModalWindow
         ThrowHelper.ThrowExceptionForHR(hr);
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     public uint GetFileTypeIndex()
     {
         uint iFileType;
@@ -103,7 +101,7 @@ public unsafe sealed class FileDialog : ModalWindow
         return iFileType;
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     public FileOpenDialogOptions GetOptions()
     {
         FileOpenDialogOptions result;
@@ -138,7 +136,7 @@ public unsafe sealed class FileDialog : ModalWindow
         ThrowHelper.ThrowExceptionForHR(hr);
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     public ShellItem GetFolder()
     {
         void* nativePointer = NativePointer;
@@ -159,7 +157,7 @@ public unsafe sealed class FileDialog : ModalWindow
         }
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     public string GetFileName()
     {
         void* nativePointer = NativePointer;
@@ -191,7 +189,7 @@ public unsafe sealed class FileDialog : ModalWindow
         ThrowHelper.ThrowExceptionForHR(hr);
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     public ShellItem GetResult()
     {
         void* nativePointer = NativePointer;

@@ -1,10 +1,9 @@
 #if NET8_0_OR_GREATER
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 
 using InlineMethod;
-
-using LocalsInit;
 
 using RiceTea.Core.Helpers;
 
@@ -15,7 +14,7 @@ partial class InternalSequenceHelper
     private static partial bool CheckTypeCanBeVectorized<T>() where T : unmanaged
             => Vector<T>.IsSupported;
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     private static unsafe partial int VectorizedCompareTo<T>(T* ptrA, T* ptrB, nuint length) where T : unmanaged
     {
         T* ptrEnd = ptrA + length;

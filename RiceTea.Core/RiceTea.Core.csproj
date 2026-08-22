@@ -28,7 +28,6 @@
 			<Weavers>
 				<InlineIL />
 				<InlineMethod />
-				<LocalsInit />
 				<Absence />
 			</Weavers>
 		</WeaverConfiguration>
@@ -50,9 +49,6 @@
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="Absence.Fody" Version="2.0.11">
-			<PrivateAssets>all</PrivateAssets>
-		</PackageReference>
-		<PackageReference Include="LocalsInit.Fody" Version="1.1.0">
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="PolySharp" Version="1.16.0">

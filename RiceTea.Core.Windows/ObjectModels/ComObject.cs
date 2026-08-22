@@ -3,14 +3,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Security;
 
-using LocalsInit;
-
 using RiceTea.Core.Helpers;
 using RiceTea.Core.Native;
 
 namespace RiceTea.Core.Windows.ObjectModels;
 
-[LocalsInit(false)]
+[SkipLocalsInit]
 [SuppressUnmanagedCodeSecurity]
 public unsafe partial class ComObject : NativeObject, IUnknown, IWin32HandleHolder
 {

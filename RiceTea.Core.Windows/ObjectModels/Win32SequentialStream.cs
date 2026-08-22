@@ -1,8 +1,7 @@
 using System;
+using System.Runtime.CompilerServices;
 
 using InlineMethod;
-
-using LocalsInit;
 
 using RiceTea.Core.Helpers;
 using RiceTea.Core.Native;
@@ -25,7 +24,7 @@ public unsafe class Win32SequentialStream : ComObject, IWin32SequentialStream
         _End
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     public ulong Read(byte* ptr, ulong length)
     {
         ulong result;
@@ -33,7 +32,7 @@ public unsafe class Win32SequentialStream : ComObject, IWin32SequentialStream
         return result;
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     public ulong Write(byte* ptr, ulong length)
     {
         ulong result;

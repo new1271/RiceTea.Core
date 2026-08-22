@@ -1,7 +1,6 @@
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
-
-using LocalsInit;
 
 using RiceTea.Core.Buffers;
 using RiceTea.Core.Text;
@@ -67,7 +66,7 @@ internal sealed unsafe class Utf8StreamReader : AsciiBasedStreamReader
         }
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     protected override string? ReadLineCore(byte[] buffer)
     {
         bool isEndOfStream = CheckEndOfStream(fullyCheck: false) && base.CheckEndOfStreamCore();
@@ -158,7 +157,7 @@ internal sealed unsafe class Utf8StreamReader : AsciiBasedStreamReader
         return builder.ToString();
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     protected override string ReadToEndCore(byte[] buffer)
     {
         bool isEndOfStream = CheckEndOfStream(fullyCheck: false) && base.CheckEndOfStreamCore();
@@ -219,7 +218,7 @@ internal sealed unsafe class Utf8StreamReader : AsciiBasedStreamReader
         return builder.ToString();
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     protected override StringWrapper? ReadLineAsStringWrapperCore(byte[] buffer)
     {
         bool isEndOfStream = CheckEndOfStream(fullyCheck: false) && base.CheckEndOfStreamCore();
@@ -271,7 +270,7 @@ internal sealed unsafe class Utf8StreamReader : AsciiBasedStreamReader
         }
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     protected override StringWrapper ReadToEndAsStringWrapperCore(byte[] buffer)
     {
         bool isEndOfStream = CheckEndOfStream(fullyCheck: false) && base.CheckEndOfStreamCore();

@@ -2,8 +2,6 @@ using System.Runtime.CompilerServices;
 
 using InlineMethod;
 
-using LocalsInit;
-
 namespace RiceTea.Core.Text;
 
 unsafe partial class AsciiEncodingHelper
@@ -32,15 +30,15 @@ unsafe partial class AsciiEncodingHelper
         return ScalarizedWriteToUtf16BufferCore(ref source, ref destination, ref length);
     }
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static partial byte* VectorizedReadFromUtf16BufferCore_OutOfAsciiRange(char* source, byte* destination, nuint length);
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static partial byte* VectorizedReadFromUtf16BufferCore(char* source, byte* destination, nuint length);
 
-    [LocalsInit(false)]
+    [SkipLocalsInit]
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static partial char* VectorizedWriteToUtf16BufferCore(byte* source, char* destination, nuint length);
 

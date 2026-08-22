@@ -4,8 +4,6 @@ using System.Runtime.CompilerServices;
 
 using InlineMethod;
 
-using LocalsInit;
-
 #pragma warning disable CS8500
 
 namespace RiceTea.Core.Helpers;
@@ -38,32 +36,32 @@ partial class SequenceHelper
         public static nuint CountOfLessThanOrEquals(T* ptr, nuint length, T value)
             => CountOfCore(ref ptr, ref length, value, CompareMethod.LessThanOrEquals);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static nuint VectorizedCountOf(T* ptr, nuint length, T value)
             => VectorizedCountOfCore(ref ptr, ref length, value, CompareMethod.Include);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static nuint VectorizedCountOfExclude(T* ptr, nuint length, T value)
             => VectorizedCountOfCore(ref ptr, ref length, value, CompareMethod.Exclude);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static nuint VectorizedCountOfGreaterThan(T* ptr, nuint length, T value)
             => VectorizedCountOfCore(ref ptr, ref length, value, CompareMethod.GreaterThan);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static nuint VectorizedCountOfLessThan(T* ptr, nuint length, T value)
             => VectorizedCountOfCore(ref ptr, ref length, value, CompareMethod.LessThan);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static nuint VectorizedCountOfGreaterThanOrEquals(T* ptr, nuint length, T value)
             => VectorizedCountOfCore(ref ptr, ref length, value, CompareMethod.GreaterThanOrEquals);
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static nuint VectorizedCountOfLessThanOrEquals(T* ptr, nuint length, T value)
             => VectorizedCountOfCore(ref ptr, ref length, value, CompareMethod.LessThanOrEquals);
@@ -86,7 +84,7 @@ partial class SequenceHelper
             return ScalarizedCountOfCore(ref ptr, ref length, value, method);
         }
 
-        [LocalsInit(false)]
+        [SkipLocalsInit]
         [Inline(InlineBehavior.Remove)]
         private static partial nuint VectorizedCountOfCore(ref T* ptr, ref nuint length, T value, [InlineParameter] CompareMethod method);
 
