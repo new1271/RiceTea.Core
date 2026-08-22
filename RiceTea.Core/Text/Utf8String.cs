@@ -36,7 +36,9 @@ internal sealed partial class Utf8String : StringWrapper, IPinnableReference<byt
         if (lengthOfBuffer > MaxUtf8StringBufferSize)
             OutOfMemoryException.Throw();
 
-        return new Utf8String(buffer = new byte[lengthOfBuffer + 1], lengthOfChars);
+        buffer = ArrayHelper.CreateUninitializedArray<byte>((int)lengthOfBuffer + 1);
+        buffer.AsUnsafeRef()[lengthOfBuffer] = default;
+        return new Utf8String(buffer, lengthOfChars);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

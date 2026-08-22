@@ -32,7 +32,7 @@ internal sealed partial class Latin1String : AsciiLikeString, IPinnableReference
         if (length > MaxStringLength)
             OutOfMemoryException.Throw();
 
-        buffer = ArrayHelper.CreateUninitializedArray<byte>((int)length);
+        buffer = ArrayHelper.CreateUninitializedArray<byte>((int)length + 1);
         buffer.AsUnsafeRef()[length] = default;
         return new Latin1String(buffer);
     }
