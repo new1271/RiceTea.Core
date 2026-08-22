@@ -38,7 +38,7 @@ public sealed class PooledList<T> : CustomListBase<T>, IDisposable
         if (capacity >= Limits.MaxArrayLength / 2)
         {
             if (capacity >= Limits.MaxArrayLength)
-                throw new OutOfMemoryException();
+                OutOfMemoryException.Throw();
             newCapacity = Limits.MaxArrayLength;
         }
         else

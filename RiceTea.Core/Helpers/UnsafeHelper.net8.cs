@@ -351,6 +351,22 @@ public static unsafe partial class UnsafeHelper
         IL.Emit.Initblk();
     }
 
+    /// <inheritdoc cref="Unsafe.InitBlockUnaligned(ref byte, byte, uint)"/>
+    [Inline(InlineBehavior.Keep, export: true)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static partial void InitBlockUnaligned(ref byte location, byte value, uint size) => Unsafe.InitBlockUnaligned(ref location, value, size);
+
+    /// <inheritdoc cref="Unsafe.InitBlockUnaligned(ref byte, byte, uint)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static partial void InitBlockUnaligned(ref byte location, byte value, nuint size)
+    {
+        IL.PushInRef(ref location);
+        IL.Push(value);
+        IL.Push(size);
+        IL.Emit.Unaligned(sizeof(byte));
+        IL.Emit.Initblk();
+    }
+
     /// <inheritdoc cref="Unsafe.InitBlockUnaligned(void*, byte, uint)"/>
     [Inline(InlineBehavior.Keep, export: true)]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

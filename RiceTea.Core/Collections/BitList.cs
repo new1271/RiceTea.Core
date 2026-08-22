@@ -31,7 +31,7 @@ public sealed class BitList : BitListBase
         if (capacity >= Limits.MaxArrayLength / 2)
         {
             if (capacity >= Limits.MaxArrayLength)
-                throw new OutOfMemoryException();
+                OutOfMemoryException.Throw();
             newCapacity = Limits.MaxArrayLength;
         }
         else

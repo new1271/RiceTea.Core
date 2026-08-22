@@ -137,6 +137,10 @@ public static unsafe partial class UnsafeHelper
 
     public static partial void InitBlock(void* ptr, byte value, nuint size);
 
+    public static partial void InitBlockUnaligned(ref byte location, byte value, uint size);
+
+    public static partial void InitBlockUnaligned(ref byte location, byte value, nuint size);
+
     public static partial void InitBlockUnaligned(void* ptr, byte value, uint size);
 
     public static partial void InitBlockUnaligned(void* ptr, byte value, nuint size);

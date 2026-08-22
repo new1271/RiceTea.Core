@@ -34,7 +34,7 @@ internal sealed partial class Utf8String : StringWrapper, IPinnableReference<byt
     public static Utf8String Allocate(nuint lengthOfBuffer, int lengthOfChars, out byte[] buffer)
     {
         if (lengthOfBuffer > MaxUtf8StringBufferSize)
-            throw new OutOfMemoryException();
+            OutOfMemoryException.Throw();
 
         return new Utf8String(buffer = new byte[lengthOfBuffer + 1], lengthOfChars);
     }
@@ -43,7 +43,7 @@ internal sealed partial class Utf8String : StringWrapper, IPinnableReference<byt
     public static unsafe StringWrapper Create(byte* source, nuint length)
     {
         if (length > MaxUtf8StringBufferSize)
-            throw new OutOfMemoryException();
+            OutOfMemoryException.Throw();
 
         if (!SequenceHelper.ContainsGreaterThan(source, length, AsciiEncodingHelper.AsciiEncodingLimit_InByte))
         {

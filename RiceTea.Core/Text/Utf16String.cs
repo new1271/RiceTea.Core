@@ -10,7 +10,9 @@ namespace RiceTea.Core.Text;
 
 internal sealed partial class Utf16String : StringWrapper, IPinnableReference<char>, IReadOnlyViewProvider<char>
 {
-    public const int CodePage = 1200;
+	private static readonly nuint MaxStringLength = unchecked((nuint)Limits.MaxStringLength);
+
+	public const int CodePage = 1200;
 
     private readonly string _value;
 
@@ -26,7 +28,7 @@ internal sealed partial class Utf16String : StringWrapper, IPinnableReference<ch
     public static Utf16String Allocate(nuint length, out string buffer)
     {
         if (length > int.MaxValue)
-            throw new OutOfMemoryException();
+            OutOfMemoryException.Throw();
 
         return new Utf16String(buffer = StringHelper.AllocateRawString(unchecked((int)length)));
     }
@@ -35,10 +37,19 @@ internal sealed partial class Utf16String : StringWrapper, IPinnableReference<ch
     public new static Utf16String Create(string source) => new Utf16String(source);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe Utf16String Create(char character, nuint length)
+    {
+        if (length > MaxStringLength)
+            OutOfMemoryException.Throw();
+
+        return new Utf16String(new string(character, unchecked((int)length)));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe Utf16String Create(char* source, nuint length)
     {
         if (length > int.MaxValue)
-            throw new OutOfMemoryException();
+            OutOfMemoryException.Throw();
 
         return new Utf16String(new string(source, 0, unchecked((int)length)));
     }

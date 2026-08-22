@@ -30,23 +30,38 @@ internal sealed partial class Latin1String : AsciiLikeString, IPinnableReference
     public static Latin1String Allocate(nuint length, out byte[] buffer)
     {
         if (length > MaxStringLength)
-            throw new OutOfMemoryException();
+            OutOfMemoryException.Throw();
 
-        return new Latin1String(buffer = new byte[length + 1]);
+        buffer = ArrayHelper.CreateUninitializedArray<byte>((int)length);
+        buffer.AsUnsafeRef()[length] = default;
+        return new Latin1String(buffer);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe StringWrapper Create(byte character, nuint length)
+    {
+        StringWrapper result;
+        byte[] buffer;
+        if (character > AsciiEncodingHelper.AsciiEncodingLimit_InByte)
+            result = Allocate(length, out buffer);
+        else
+            result = AsciiString.Allocate(length, out buffer);
+        UnsafeHelper.InitBlockUnaligned(ref UnsafeHelper.GetArrayDataReference(buffer), character, length);
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe StringWrapper Create(byte* source, nuint length)
     {
         if (length >= MaxStringLength)
-            throw new OutOfMemoryException();
+            OutOfMemoryException.Throw();
 
         StringWrapper result;
         byte[] buffer;
-        if (!SequenceHelper.ContainsGreaterThan(source, length, AsciiEncodingHelper.AsciiEncodingLimit_InByte))
-            result = AsciiString.Allocate(length, out buffer);
-        else
+        if (SequenceHelper.ContainsGreaterThan(source, length, AsciiEncodingHelper.AsciiEncodingLimit_InByte))
             result = Allocate(length, out buffer);
+        else
+            result = AsciiString.Allocate(length, out buffer);
         fixed (byte* destination = buffer)
             UnsafeHelper.CopyBlockUnaligned(destination, source, length * sizeof(byte));
         return result;
