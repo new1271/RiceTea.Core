@@ -22,8 +22,11 @@ partial class NativeMethods
         void SetWaitingHandle(IntPtr handle);
         void DestroyWaitingHandle(IntPtr handle);
         bool WaitForWaitingHandle(IntPtr handle, uint timeout);
+#if !NET8_0_OR_GREATER
         void* AllocMemory(nuint size);
+
         void FreeMemory(void* ptr);
+#endif
         void CopyMemory(void* destination, void* source, nuint sizeInBytes);
         void MoveMemory(void* destination, void* source, nuint sizeInBytes);
         void* AllocMemoryPage(nuint size, ProtectMemoryPageFlags flags);

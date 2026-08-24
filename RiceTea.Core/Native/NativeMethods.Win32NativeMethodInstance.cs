@@ -20,7 +20,10 @@ partial class NativeMethods
     private sealed unsafe class Win32NativeMethodInstance : INativeMethodInstance
     {
         private static readonly void* _waitOnAddressFunc, _wakeByAddressAllFunc;
-        private readonly IntPtr _heap, _process;
+        private readonly IntPtr _process;
+#if !NET8_0_OR_GREATER
+        private readonly IntPtr _heap;
+#endif
 
         static Win32NativeMethodInstance()
         {
@@ -40,11 +43,13 @@ partial class NativeMethods
         [DllImport("kernel32", CallingConvention = CallingConvention.StdCall)]
         private static extern IntPtr GetCurrentProcess();
 
+#if !NET8_0_OR_GREATER
         [DllImport("kernel32", CallingConvention = CallingConvention.StdCall)]
         private static extern void* HeapAlloc(IntPtr hHeap, int dwFlags, nuint size);
 
         [DllImport("kernel32", CallingConvention = CallingConvention.StdCall)]
         private static extern void HeapFree(IntPtr hHeap, int dwFlags, void* ptr);
+#endif
 
         [DllImport("kernel32", CallingConvention = CallingConvention.StdCall)]
         private static extern void* VirtualAlloc(void* address, nuint dwSize, MemoryAllocationTypes allocationTypes, PageAccessRights rights);
@@ -117,8 +122,10 @@ partial class NativeMethods
 
         public Win32NativeMethodInstance()
         {
-            _heap = GetProcessHeap();
             _process = GetCurrentProcess();
+#if !NET8_0_OR_GREATER
+            _heap = GetProcessHeap();
+#endif
         }
 
         public uint GetCurrentThreadId() => GetCurrentThreadIdCore();
@@ -210,9 +217,11 @@ partial class NativeMethods
                 return ModernWait(handle, timeout);
         }
 
+#if !NET8_0_OR_GREATER
         public void* AllocMemory(nuint size) => HeapAlloc(_heap, 0, size);
 
         public void FreeMemory(void* ptr) => HeapFree(_heap, 0, ptr);
+#endif
 
         public void CopyMemory(void* destination, void* source, nuint sizeInBytes) => RtlCopyMemory(destination, source, sizeInBytes);
 

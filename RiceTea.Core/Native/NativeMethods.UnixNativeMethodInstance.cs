@@ -22,6 +22,13 @@ partial class NativeMethods
     [SuppressUnmanagedCodeSecurity]
     private sealed unsafe class UnixNativeMethodInstance : INativeMethodInstance
     {
+        private const string CLibraryName
+#if NET8_0_OR_GREATER
+            = "c";
+#else
+            = "libc";
+#endif
+
         private static readonly void* _gettidFunc, _cacheflushFunc;
         private static readonly nint _syscallID_gettid, _syscallID_futex;
 
@@ -61,34 +68,36 @@ partial class NativeMethods
         private static int gettid() => ((delegate* unmanaged[Cdecl]<int>)_gettidFunc)();
 
         [SuppressGCTransition]
-        [DllImport("libc", EntryPoint = nameof(syscall))]
+        [DllImport(CLibraryName, EntryPoint = nameof(syscall))]
         private static extern nint syscall_fast(nint number);
 
-        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(CLibraryName, CallingConvention = CallingConvention.Cdecl)]
         private static extern nint syscall(nint number);
 
-        [DllImport("libc", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport(CLibraryName, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         private static extern nint syscall(nint number, uint* uaddr, FutexMode mode, uint val, TimeSpecification* timeout);
 
-        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(CLibraryName, CallingConvention = CallingConvention.Cdecl)]
         private static extern nint syscall(nint number, uint* uaddr, FutexMode mode, uint val);
 
-        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+#if !NET8_0_OR_GREATER
+        [DllImport(CLibraryName, CallingConvention = CallingConvention.Cdecl)]
         private static extern void* malloc(nuint size);
 
-        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(CLibraryName, CallingConvention = CallingConvention.Cdecl)]
         private static extern void free(void* memblock);
+#endif
 
-        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(CLibraryName, CallingConvention = CallingConvention.Cdecl)]
         private static extern void* memmove(void* dest, void* src, nuint sizeInBytes);
 
-        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(CLibraryName, CallingConvention = CallingConvention.Cdecl)]
         private static extern void* memcpy(void* dest, void* src, nuint sizeInBytes);
 
-        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(CLibraryName, CallingConvention = CallingConvention.Cdecl)]
         private static extern void* mmap(void* ptr, nuint length, ProtectMemoryPageFlags prot, MemoryMapFlags flags, int fd, nint offset);
 
-        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(CLibraryName, CallingConvention = CallingConvention.Cdecl)]
         private static extern int mprotect(void* ptr, nuint length, ProtectMemoryPageFlags flags);
 
         public static int cacheflush(void* addr, int nbytes, int cache)
@@ -100,15 +109,15 @@ partial class NativeMethods
         }
 
         [SuppressGCTransition]
-        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(CLibraryName, CallingConvention = CallingConvention.Cdecl)]
         private static extern int sched_getcpu();
 
         [SuppressGCTransition]
-        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(CLibraryName, CallingConvention = CallingConvention.Cdecl)]
         private static extern int clock_gettime(int clk_id, TimeSpecification* t);
 
         [SuppressGCTransition]
-        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(CLibraryName, CallingConvention = CallingConvention.Cdecl)]
         private static extern int clock_nanosleep(int clk_id, int flags, TimeSpecification* t, TimeSpecification* remain);
 
         public uint GetCurrentThreadId() => (uint)gettid();
@@ -282,9 +291,11 @@ partial class NativeMethods
             return true;
         }
 
+#if !NET8_0_OR_GREATER
         public void* AllocMemory(nuint size) => malloc(size);
 
         public void FreeMemory(void* ptr) => free(ptr);
+#endif
 
         public void CopyMemory(void* destination, void* source, nuint sizeInBytes) => memcpy(destination, source, sizeInBytes);
 
@@ -312,14 +323,27 @@ partial class NativeMethods
 
         public static void* GetImportedMethodPointerCore(string? dllName, string methodName)
         {
+            IntPtr module;
+#if NET8_0_OR_GREATER
+            if (dllName is null)
+                module = NativeLibrary.GetMainProgramHandle();
+            else
+            {
+                if (!NativeLibrary.TryLoad(dllName, out module))
+                    return null;
+            }
+
+            return NativeLibrary.TryGetExport(module, methodName, out module) ? module.ToPointer() : null;
+#else
             const int RTLD_NOW = 2;
             const int RTLD_LOCAL = 0;
 
-            IntPtr module = dlopen(dllName, RTLD_NOW | RTLD_LOCAL);
+            module = dlopen(dllName, RTLD_NOW | RTLD_LOCAL);
 
             ArrayPool<byte> pool = ArrayPool<byte>.Shared;
 
             return GetImportedMethodPointerCore(pool, module, methodName);
+#endif
         }
 
 #if NET8_0_OR_GREATER
@@ -344,25 +368,47 @@ partial class NativeMethods
 
         public static void*[] GetImportedMethodPointersCore(string? dllName, ParamArrayTiny<string> methodNames)
         {
+            int length = methodNames.Length;
+            if (length <= 0)
+                return [];
+
+            void*[] pointers = new void*[length];
+            IntPtr module;
+#if NET8_0_OR_GREATER
+            if (dllName is null)
+                module = NativeLibrary.GetMainProgramHandle();
+            else
+            {
+                if (!NativeLibrary.TryLoad(dllName, out module))
+                    return pointers;
+            }
+
+            int i = 0;
+            do
+            {
+                string methodName = methodNames[i];
+                pointers[i] = GetImportedMethodPointerCore(module, methodName);
+            } while (++i < length);
+#else
             const int RTLD_NOW = 2;
             const int RTLD_LOCAL = 0;
 
-            IntPtr module = dlopen(dllName, RTLD_NOW | RTLD_LOCAL);
+            module = dlopen(dllName, RTLD_NOW | RTLD_LOCAL);
 
             ArrayPool<byte> pool = ArrayPool<byte>.Shared;
 
-            int length = methodNames.Length;
-            void*[] pointers = new void*[length];
-
-            for (int i = 0; i < length; i++)
+            int i = 0;
+            do
             {
                 string methodName = methodNames[i];
                 pointers[i] = GetImportedMethodPointerCore(pool, module, methodName);
-            }
+            } while (++i < length);
+#endif
 
             return pointers;
         }
 
+#if !NET8_0_OR_GREATER
         public static void* GetImportedMethodPointerCore(ArrayPool<byte> pool, IntPtr module, string methodName)
         {
             int length = methodName.Length;
@@ -382,9 +428,13 @@ partial class NativeMethods
                 pool.Return(buffer);
             }
         }
+#endif
 
         public static void* GetImportedMethodPointerCore(IntPtr module, string methodName)
         {
+#if NET8_0_OR_GREATER
+            return NativeLibrary.TryGetExport(module, methodName, out module) ? module.ToPointer() : null;
+#else
             int length = methodName.Length;
             byte[] buffer = new byte[length + 1];
             fixed (char* source = methodName)
@@ -394,8 +444,10 @@ partial class NativeMethods
                 destination[length] = 0;
                 return LibDl.Instance.dlsym(module, destination);
             }
+#endif
         }
 
+#if !NET8_0_OR_GREATER
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static IntPtr dlopen(string? filename, int flags)
         {
@@ -420,6 +472,7 @@ partial class NativeMethods
                 pool.Return(buffer);
             }
         }
+#endif
 
 #if NET8_0_OR_GREATER
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
@@ -492,6 +545,7 @@ partial class NativeMethods
             public nuint tv_nsec;
         }
 
+#if !NET8_0_OR_GREATER
         private static class LibDl
         {
             public static readonly ILibDl Instance = FindInstance();
@@ -524,10 +578,10 @@ partial class NativeMethods
                     IL.Emit.Call(new MethodRef(typeof(RuntimeHelpers), nameof(RuntimeHelpers.PrepareMethod), typeof(RuntimeMethodHandle)));
                 }
 
-                [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+                [DllImport(CLibraryName, CallingConvention = CallingConvention.Cdecl)]
                 private static extern IntPtr dlopen(byte* filename, int flags);
 
-                [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+                [DllImport(CLibraryName, CallingConvention = CallingConvention.Cdecl)]
                 private static extern void* dlsym(IntPtr handle, byte* symbol);
 
                 IntPtr ILibDl.dlopen(byte* filename, int flags) => dlopen(filename, flags);
@@ -563,5 +617,6 @@ partial class NativeMethods
 
             void* dlsym(IntPtr handle, byte* symbol);
         }
+#endif
     }
 }

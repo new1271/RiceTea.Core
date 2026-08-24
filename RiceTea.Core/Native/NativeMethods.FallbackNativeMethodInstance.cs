@@ -88,9 +88,11 @@ partial class NativeMethods
             return waitHandle.WaitOne((int)timeout);
         }
 
+#if !NET8_0_OR_GREATER
         public void* AllocMemory(nuint size) => Marshal.AllocHGlobal(unchecked((nint)size)).ToPointer();
 
         public void FreeMemory(void* ptr) => Marshal.FreeHGlobal(new IntPtr(ptr));
+#endif
 
         public void CopyMemory(void* destination, void* source, nuint sizeInBytes)
             => UnsafeHelper.CopyBlockUnaligned(destination, source, sizeInBytes);

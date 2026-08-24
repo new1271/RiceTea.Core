@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 
 using RiceTea.Core.Helpers;
@@ -26,82 +25,28 @@ partial class NativeMethods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void* AllocMemory(int size) => _methodInstance switch
-    {
-        Win32NativeMethodInstance inst => inst.AllocMemory(MathHelper.MakeUnsigned(size)),
-        UnixNativeMethodInstance inst => inst.AllocMemory(MathHelper.MakeUnsigned(size)),
-        FallbackNativeMethodInstance inst => inst.AllocMemory(MathHelper.MakeUnsigned(size)),
-        _ => _methodInstance.AllocMemory(MathHelper.MakeUnsigned(size))
-    };
+    public static unsafe void* AllocMemory(nint size) => AllocMemory(MathHelper.MakeUnsigned(size));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void* AllocMemory(uint size) => _methodInstance switch
-    {
-        Win32NativeMethodInstance inst => inst.AllocMemory(size),
-        UnixNativeMethodInstance inst => inst.AllocMemory(size),
-        FallbackNativeMethodInstance inst => inst.AllocMemory(size),
-        _ => _methodInstance.AllocMemory(size)
-    };
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void* AllocMemory(long size) => _methodInstance switch
-    {
-        Win32NativeMethodInstance inst => inst.AllocMemory(unchecked((nuint)MathHelper.MakeUnsigned(size))),
-        UnixNativeMethodInstance inst => inst.AllocMemory(unchecked((nuint)MathHelper.MakeUnsigned(size))),
-        FallbackNativeMethodInstance inst => inst.AllocMemory(unchecked((nuint)MathHelper.MakeUnsigned(size))),
-        _ => _methodInstance.AllocMemory(unchecked((nuint)MathHelper.MakeUnsigned(size)))
-    };
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void* AllocMemory(ulong size) => _methodInstance switch
-    {
-        Win32NativeMethodInstance inst => inst.AllocMemory(unchecked((nuint)size)),
-        UnixNativeMethodInstance inst => inst.AllocMemory(unchecked((nuint)size)),
-        FallbackNativeMethodInstance inst => inst.AllocMemory(unchecked((nuint)size)),
-        _ => _methodInstance.AllocMemory(unchecked((nuint)size))
-    };
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void* AllocMemory(nint size) => _methodInstance switch
-    {
-        Win32NativeMethodInstance inst => inst.AllocMemory(MathHelper.MakeUnsigned(size)),
-        UnixNativeMethodInstance inst => inst.AllocMemory(MathHelper.MakeUnsigned(size)),
-        FallbackNativeMethodInstance inst => inst.AllocMemory(MathHelper.MakeUnsigned(size)),
-        _ => _methodInstance.AllocMemory(MathHelper.MakeUnsigned(size))
-    };
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void* AllocMemory(nuint size) => _methodInstance switch
-    {
-        Win32NativeMethodInstance inst => inst.AllocMemory(size),
-        UnixNativeMethodInstance inst => inst.AllocMemory(size),
-        FallbackNativeMethodInstance inst => inst.AllocMemory(size),
-        _ => _methodInstance.AllocMemory(size)
-    };
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void FreeMemory(IntPtr ptr)
-    {
-        switch (_methodInstance)
+    public static unsafe void* AllocMemory(nuint size)
+#if NET8_0_OR_GREATER
+        => System.Runtime.InteropServices.NativeMemory.Alloc(size);
+#else
+        => _methodInstance switch
         {
-            case Win32NativeMethodInstance inst:
-                inst.FreeMemory(ptr.ToPointer());
-                break;
-            case UnixNativeMethodInstance inst:
-                inst.FreeMemory(ptr.ToPointer());
-                break;
-            case FallbackNativeMethodInstance inst:
-                inst.FreeMemory(ptr.ToPointer());
-                break;
-            default:
-                _methodInstance.FreeMemory(ptr.ToPointer());
-                break;
-        }
-    }
+            Win32NativeMethodInstance inst => inst.AllocMemory(size),
+            UnixNativeMethodInstance inst => inst.AllocMemory(size),
+            FallbackNativeMethodInstance inst => inst.AllocMemory(size),
+            _ => _methodInstance.AllocMemory(size)
+        };
+#endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void FreeMemory(void* ptr)
     {
+#if NET8_0_OR_GREATER
+        System.Runtime.InteropServices.NativeMemory.Free(ptr);
+#else
         switch (_methodInstance)
         {
             case Win32NativeMethodInstance inst:
@@ -117,5 +62,6 @@ partial class NativeMethods
                 _methodInstance.FreeMemory(ptr);
                 break;
         }
+#endif
     }
 }

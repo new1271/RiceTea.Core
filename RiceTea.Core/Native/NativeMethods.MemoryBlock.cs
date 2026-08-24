@@ -1,87 +1,33 @@
-using System;
 using System.Runtime.CompilerServices;
-using System.Security;
-
-using RiceTea.Core.Helpers;
 
 namespace RiceTea.Core.Native;
 
 partial class NativeMethods
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SecurityCritical]
-    public static unsafe NativeMemoryBlock AllocMemoryBlock(int size)
-    {
-        void* ptr = AllocMemory(size);
-        if (ptr == default)
-            return NativeMemoryBlock.Empty;
-        GC.AddMemoryPressure(size);
-        return new NativeMemoryBlock(ptr, (nuint)size);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SecurityCritical]
-    public static unsafe NativeMemoryBlock AllocMemoryBlock(uint size)
-    {
-        void* ptr = AllocMemory(size);
-        if (ptr == default)
-            return NativeMemoryBlock.Empty;
-        GC.AddMemoryPressure(size);
-        return new NativeMemoryBlock(ptr, size);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SecurityCritical]
-    public static unsafe NativeMemoryBlock AllocMemoryBlock(long size)
-    {
-        void* ptr = AllocMemory(size);
-        if (ptr == default)
-            return NativeMemoryBlock.Empty;
-        GC.AddMemoryPressure(size);
-        return new NativeMemoryBlock(ptr, (nuint)size);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SecurityCritical]
-    public static unsafe NativeMemoryBlock AllocMemoryBlock(ulong size)
-    {
-        void* ptr = AllocMemory(size);
-        if (ptr == default)
-            return NativeMemoryBlock.Empty;
-        GC.AddMemoryPressure(MathHelper.MakeSigned(size));
-        return new NativeMemoryBlock(ptr, (nuint)size);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SecurityCritical]
     public static unsafe NativeMemoryBlock AllocMemoryBlock(nint size)
     {
         void* ptr = AllocMemory(size);
         if (ptr == default)
             return NativeMemoryBlock.Empty;
-        GC.AddMemoryPressure(size);
         return new NativeMemoryBlock(ptr, (nuint)size);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SecurityCritical]
     public static unsafe NativeMemoryBlock AllocMemoryBlock(nuint size)
     {
         void* ptr = AllocMemory(size);
         if (ptr == default)
             return NativeMemoryBlock.Empty;
-        GC.AddMemoryPressure(MathHelper.MakeSigned(size));
         return new NativeMemoryBlock(ptr, size);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SecurityCritical]
-    internal static unsafe void FreeMemoryBlock(in NativeMemoryBlock block)
+    public static unsafe void FreeMemoryBlock(in NativeMemoryBlock block)
     {
         void* ptr = block.NativePointer;
         if (ptr == null)
             return;
-        _methodInstance.FreeMemory(ptr);
-        GC.RemoveMemoryPressure(MathHelper.MakeSigned(block.Length));
+        FreeMemory(ptr);
     }
 }
