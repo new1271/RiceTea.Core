@@ -81,11 +81,13 @@ partial class NativeMethods
         [DllImport("kernel32")]
         private static extern void* GetProcAddress(IntPtr hModule, byte* lpProcName);
 
+#if !NET8_0_OR_GREATER
         [DllImport("kernel32")]
         private static extern IntPtr LoadLibraryW(char* lpLibFileName);
 
         [DllImport("kernel32")]
         private static extern IntPtr GetModuleHandleW(char* lpModuleName);
+#endif
 
         [DllImport("kernel32")]
         private static extern IntPtr CreateEventW(void* lpEventAttributes, SysBool32 bManualReset, SysBool32 bInitialState, char* lpName);
@@ -241,13 +243,13 @@ partial class NativeMethods
 
         private static void* GetImportedMethodPointerCore(string? dllName, int methodIndex)
         {
-            IntPtr module = dllName is null ? GetModuleHandleW(null) : LoadLibrary(dllName);
+            IntPtr module = dllName is null ? GetMainProgramHandle() : LoadLibrary(dllName);
             return GetProcAddress(module, (byte*)methodIndex);
         }
 
         private static void* GetImportedMethodPointerCore(string? dllName, string methodName)
         {
-            IntPtr module = dllName is null ? GetModuleHandleW(null) : LoadLibrary(dllName);
+            IntPtr module = dllName is null ? GetMainProgramHandle() : LoadLibrary(dllName);
 
             ArrayPool<byte> pool = ArrayPool<byte>.Shared;
 
@@ -261,7 +263,7 @@ partial class NativeMethods
 #else
         private static void* GetImportedMethodPointerCore_Internal(string? dllName, string methodName)
         {
-            IntPtr module = dllName is null ? GetModuleHandleW(null) : LoadLibrary(dllName);
+            IntPtr module = dllName is null ? GetMainProgramHandle() : LoadLibrary(dllName);
 
             ArrayPool<byte> pool = ArrayPool<byte>.Shared;
             if (pool is ArrayPool<byte>.SystemBufferImpl)
@@ -273,7 +275,7 @@ partial class NativeMethods
 
         public static void*[] GetImportedMethodPointersCore(string? dllName, ParamArrayTiny<int> methodIndices)
         {
-            IntPtr module = dllName is null ? GetModuleHandleW(null) : LoadLibrary(dllName);
+            IntPtr module = dllName is null ? GetMainProgramHandle() : LoadLibrary(dllName);
 
             int length = methodIndices.Length;
             void*[] pointers = new void*[length];
@@ -289,7 +291,7 @@ partial class NativeMethods
 
         private static void*[] GetImportedMethodPointersCore(string? dllName, ParamArrayTiny<string> methodNames)
         {
-            IntPtr module = dllName is null ? GetModuleHandleW(null) : LoadLibrary(dllName);
+            IntPtr module = dllName is null ? GetMainProgramHandle() : LoadLibrary(dllName);
 
             ArrayPool<byte> pool = ArrayPool<byte>.Shared;
 
@@ -339,10 +341,24 @@ partial class NativeMethods
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static IntPtr GetMainProgramHandle()
+        {
+#if NET8_0_OR_GREATER
+            return NativeLibrary.GetMainProgramHandle();
+#else
+            return GetModuleHandleW(null);
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static IntPtr LoadLibrary(string lpLibFileName)
         {
+#if NET8_0_OR_GREATER
+            return NativeLibrary.TryLoad(lpLibFileName, out IntPtr result) ? result : IntPtr.Zero;
+#else
             fixed (char* ptr = lpLibFileName)
                 return LoadLibraryW(ptr);
+#endif
         }
 
         private static bool LegacyWait(IntPtr waitingHandle, uint timeout)
