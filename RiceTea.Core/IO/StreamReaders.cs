@@ -10,6 +10,8 @@ namespace RiceTea.Core.IO;
 
 public static partial class StreamReaders
 {
+    public static readonly IStreamReader Null = new NullStreamReader();
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IStreamReader CreateStreamReader(Stream stream)
         => new StreamReaderWrapper(stream);
