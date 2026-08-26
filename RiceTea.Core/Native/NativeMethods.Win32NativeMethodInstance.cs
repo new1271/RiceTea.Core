@@ -251,9 +251,13 @@ partial class NativeMethods
         {
             IntPtr module = dllName is null ? GetMainProgramHandle() : LoadLibrary(dllName);
 
+#if NET8_0_OR_GREATER
+            return GetImportedMethodPointerCore(module, methodName);
+#else
             ArrayPool<byte> pool = ArrayPool<byte>.Shared;
 
             return GetImportedMethodPointerCore(pool, module, methodName);
+#endif
         }
 
 #if NET8_0_OR_GREATER
@@ -291,22 +295,35 @@ partial class NativeMethods
 
         private static void*[] GetImportedMethodPointersCore(string? dllName, ParamArrayTiny<string> methodNames)
         {
-            IntPtr module = dllName is null ? GetMainProgramHandle() : LoadLibrary(dllName);
-
-            ArrayPool<byte> pool = ArrayPool<byte>.Shared;
-
             int length = methodNames.Length;
+            if (length <= 0)
+                return [];
+
+            IntPtr module = dllName is null ? GetMainProgramHandle() : LoadLibrary(dllName);
             void*[] pointers = new void*[length];
 
-            for (int i = 0; i < length; i++)
+#if NET8_0_OR_GREATER
+            int i = 0;
+            do
+            {
+                string methodName = methodNames[i];
+                pointers[i] = GetImportedMethodPointerCore(module, methodName);
+            } while (++i < length);
+#else
+            ArrayPool<byte> pool = ArrayPool<byte>.Shared;
+
+            int i = 0;
+            do
             {
                 string methodName = methodNames[i];
                 pointers[i] = GetImportedMethodPointerCore(pool, module, methodName);
-            }
+            } while (++i < length);
+#endif
 
             return pointers;
         }
 
+#if !NET8_0_OR_GREATER
         private static void* GetImportedMethodPointerCore(ArrayPool<byte> pool, IntPtr module, string methodName)
         {
             int length = methodName.Length;
@@ -326,9 +343,13 @@ partial class NativeMethods
                 pool.Return(buffer);
             }
         }
+#endif
 
         private static void* GetImportedMethodPointerCore(IntPtr module, string methodName)
         {
+#if NET8_0_OR_GREATER
+            return NativeLibrary.TryGetExport(module, methodName, out module) ? module.ToPointer() : null;
+#else
             int length = methodName.Length;
             byte[] buffer = new byte[length + 1];
             fixed (char* source = methodName)
@@ -338,6 +359,7 @@ partial class NativeMethods
                 destination[length] = 0;
                 return GetProcAddress(module, destination);
             }
+#endif
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
