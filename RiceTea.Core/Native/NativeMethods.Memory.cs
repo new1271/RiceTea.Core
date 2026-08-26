@@ -34,9 +34,9 @@ partial class NativeMethods
 #else
         => _methodInstance switch
         {
-            Win32NativeMethodInstance inst => inst.AllocMemory(size),
-            UnixNativeMethodInstance inst => inst.AllocMemory(size),
-            FallbackNativeMethodInstance inst => inst.AllocMemory(size),
+            Win32Instance => Win32Instance.AllocMemory(size),
+            UnixInstance => UnixInstance.AllocMemory(size),
+            FallbackInstance => FallbackInstance.AllocMemory(size),
             _ => _methodInstance.AllocMemory(size)
         };
 #endif
@@ -49,14 +49,14 @@ partial class NativeMethods
 #else
         switch (_methodInstance)
         {
-            case Win32NativeMethodInstance inst:
-                inst.FreeMemory(ptr);
+            case Win32Instance:
+                Win32Instance.FreeMemory(ptr);
                 break;
-            case UnixNativeMethodInstance inst:
-                inst.FreeMemory(ptr);
+            case UnixInstance:
+                UnixInstance.FreeMemory(ptr);
                 break;
-            case FallbackNativeMethodInstance inst:
-                inst.FreeMemory(ptr);
+            case FallbackInstance:
+                FallbackInstance.FreeMemory(ptr);
                 break;
             default:
                 _methodInstance.FreeMemory(ptr);

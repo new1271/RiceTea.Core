@@ -5,30 +5,23 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Threading;
 
-using InlineMethod;
-
-using RiceTea.Core.Buffers;
 using RiceTea.Core.Helpers;
 using RiceTea.Core.Structures;
-using RiceTea.Core.Text;
 
 namespace RiceTea.Core.Native;
 
 partial class NativeMethods
 {
     [SuppressUnmanagedCodeSecurity]
-    private sealed unsafe class Win32NativeMethodInstance : INativeMethodInstance
+    unsafe partial class Win32Instance
     {
         private static readonly void* _waitOnAddressFunc, _wakeByAddressAllFunc;
-        private readonly IntPtr _process;
-#if !NET8_0_OR_GREATER
-        private readonly IntPtr _heap;
-#endif
+        private static readonly IntPtr _process = GetCurrentProcess();
 
-        static Win32NativeMethodInstance()
+        static Win32Instance()
         {
-            _waitOnAddressFunc = GetImportedMethodPointerCore_Internal("kernelbase.dll", nameof(WaitOnAddress));
-            _wakeByAddressAllFunc = GetImportedMethodPointerCore_Internal("kernelbase.dll", nameof(WakeByAddressAll));
+            _waitOnAddressFunc = GetImportedMethodPointer("kernelbase.dll", nameof(WaitOnAddress));
+            _wakeByAddressAllFunc = GetImportedMethodPointer("kernelbase.dll", nameof(WakeByAddressAll));
         }
 
         [SuppressGCTransition]
@@ -42,14 +35,6 @@ partial class NativeMethods
         [SuppressGCTransition]
         [DllImport("kernel32", CallingConvention = CallingConvention.StdCall)]
         private static extern IntPtr GetCurrentProcess();
-
-#if !NET8_0_OR_GREATER
-        [DllImport("kernel32", CallingConvention = CallingConvention.StdCall)]
-        private static extern void* HeapAlloc(IntPtr hHeap, int dwFlags, nuint size);
-
-        [DllImport("kernel32", CallingConvention = CallingConvention.StdCall)]
-        private static extern void HeapFree(IntPtr hHeap, int dwFlags, void* ptr);
-#endif
 
         [DllImport("kernel32", CallingConvention = CallingConvention.StdCall)]
         private static extern void* VirtualAlloc(void* address, nuint dwSize, MemoryAllocationTypes allocationTypes, PageAccessRights rights);
@@ -76,18 +61,6 @@ partial class NativeMethods
 
         [DllImport("ntdll")]
         private static extern uint NtDelayExecution(SysBool32 alertable, long* delayInterval);
-
-        [SuppressGCTransition]
-        [DllImport("kernel32")]
-        private static extern void* GetProcAddress(IntPtr hModule, byte* lpProcName);
-
-#if !NET8_0_OR_GREATER
-        [DllImport("kernel32")]
-        private static extern IntPtr LoadLibraryW(char* lpLibFileName);
-
-        [DllImport("kernel32")]
-        private static extern IntPtr GetModuleHandleW(char* lpModuleName);
-#endif
 
         [DllImport("kernel32")]
         private static extern IntPtr CreateEventW(void* lpEventAttributes, SysBool32 bManualReset, SysBool32 bInitialState, char* lpName);
@@ -122,26 +95,18 @@ partial class NativeMethods
             ((delegate* unmanaged[Stdcall]<void*, void>)func)(address);
         }
 
-        public Win32NativeMethodInstance()
-        {
-            _process = GetCurrentProcess();
-#if !NET8_0_OR_GREATER
-            _heap = GetProcessHeap();
-#endif
-        }
+        public static uint GetCurrentThreadId() => GetCurrentThreadIdCore();
 
-        public uint GetCurrentThreadId() => GetCurrentThreadIdCore();
+        public static uint GetCurrentProcessorId() => GetCurrentProcessorNumber();
 
-        public uint GetCurrentProcessorId() => GetCurrentProcessorNumber();
-
-        public ulong GetTicksForSystem()
+        public static ulong GetTicksForSystem()
         {
             ulong result;
             QueryUnbiasedInterruptTime(&result);
             return result;
         }
 
-        public bool SleepInRelativeTicks(ulong ticks)
+        public static bool SleepInRelativeTicks(ulong ticks)
         {
             if (ticks <= 0)
                 return false;
@@ -149,7 +114,7 @@ partial class NativeMethods
             return true;
         }
 
-        public bool SleepInAbsoluteTicks(ulong ticks)
+        public static bool SleepInAbsoluteTicks(ulong ticks)
         {
             ulong currentTicks;
             QueryUnbiasedInterruptTime(&currentTicks);
@@ -159,15 +124,7 @@ partial class NativeMethods
             return true;
         }
 
-        public void* GetImportedMethodPointer(string? dllName, int methodIndex) => GetImportedMethodPointerCore(dllName, methodIndex);
-
-        public void* GetImportedMethodPointer(string? dllName, string methodName) => GetImportedMethodPointerCore(dllName, methodName);
-
-        public void*[] GetImportedMethodPointers(string? dllName, in ParamArrayTiny<int> methodIndices) => GetImportedMethodPointersCore(dllName, methodIndices);
-
-        public void*[] GetImportedMethodPointers(string? dllName, in ParamArrayTiny<string> methodNames) => GetImportedMethodPointersCore(dllName, methodNames);
-
-        public IntPtr CreateWaitingHandle(bool initialState, bool autoReset)
+        public static IntPtr CreateWaitingHandle(bool initialState, bool autoReset)
         {
             if (_waitOnAddressFunc is null)
                 return CreateEventW(null, !autoReset, initialState, null);
@@ -179,7 +136,7 @@ partial class NativeMethods
             }
         }
 
-        public void ResetWaitingHandle(IntPtr handle)
+        public static void ResetWaitingHandle(IntPtr handle)
         {
             if (_waitOnAddressFunc is null)
                 ResetEvent(handle);
@@ -189,7 +146,7 @@ partial class NativeMethods
             }
         }
 
-        public void SetWaitingHandle(IntPtr handle)
+        public static void SetWaitingHandle(IntPtr handle)
         {
             if (_waitOnAddressFunc is null)
                 SetEvent(handle);
@@ -200,7 +157,7 @@ partial class NativeMethods
             }
         }
 
-        public void DestroyWaitingHandle(IntPtr handle)
+        public static void DestroyWaitingHandle(IntPtr handle)
         {
             if (_waitOnAddressFunc is null)
                 CloseHandle(handle);
@@ -211,7 +168,7 @@ partial class NativeMethods
             }
         }
 
-        public bool WaitForWaitingHandle(IntPtr handle, uint timeout)
+        public static bool WaitForWaitingHandle(IntPtr handle, uint timeout)
         {
             if (_waitOnAddressFunc is null)
                 return LegacyWait(handle, timeout);
@@ -219,169 +176,29 @@ partial class NativeMethods
                 return ModernWait(handle, timeout);
         }
 
-#if !NET8_0_OR_GREATER
-        public void* AllocMemory(nuint size) => HeapAlloc(_heap, 0, size);
+        public static void CopyMemory(void* destination, void* source, nuint sizeInBytes) => RtlCopyMemory(destination, source, sizeInBytes);
 
-        public void FreeMemory(void* ptr) => HeapFree(_heap, 0, ptr);
-#endif
+        public static void MoveMemory(void* destination, void* source, nuint sizeInBytes) => RtlMoveMemory(destination, source, sizeInBytes);
 
-        public void CopyMemory(void* destination, void* source, nuint sizeInBytes) => RtlCopyMemory(destination, source, sizeInBytes);
-
-        public void MoveMemory(void* destination, void* source, nuint sizeInBytes) => RtlMoveMemory(destination, source, sizeInBytes);
-
-        public void* AllocMemoryPage(nuint size, ProtectMemoryPageFlags flags)
+        public static void* AllocMemoryPage(nuint size, ProtectMemoryPageFlags flags)
             => VirtualAlloc(null, size, MemoryAllocationTypes.Commit | MemoryAllocationTypes.Reserve, ConvertPageAccessRightsFromFlags(flags));
 
-        public void ProtectMemoryPage(void* ptr, nuint size, ProtectMemoryPageFlags flags)
+        public static void ProtectMemoryPage(void* ptr, nuint size, ProtectMemoryPageFlags flags)
         {
             PageAccessRights rights = ConvertPageAccessRightsFromFlags(flags);
             PageAccessRights oldRights;
             VirtualProtect(ptr, size, rights, &oldRights);
         }
 
-        public void FlushInstructionCache(void* ptr, nuint size) => FlushInstructionCache(_process, ptr, size);
+        public static void FlushInstructionCache(void* ptr, nuint size) => FlushInstructionCache(_process, ptr, size);
 
-        private static void* GetImportedMethodPointerCore(string? dllName, int methodIndex)
-        {
-            IntPtr module = dllName is null ? GetMainProgramHandle() : LoadLibrary(dllName);
-            return GetProcAddress(module, (byte*)methodIndex);
-        }
+        public static partial void* GetImportedMethodPointer(string? dllName, int methodIndex);
 
-        private static void* GetImportedMethodPointerCore(string? dllName, string methodName)
-        {
-            IntPtr module = dllName is null ? GetMainProgramHandle() : LoadLibrary(dllName);
+        public static partial void* GetImportedMethodPointer(string? dllName, string methodName);
 
-#if NET8_0_OR_GREATER
-            return GetImportedMethodPointerCore(module, methodName);
-#else
-            ArrayPool<byte> pool = ArrayPool<byte>.Shared;
+        public static partial void*[] GetImportedMethodPointers(string? dllName, in ParamArrayTiny<int> methodIndices);
 
-            return GetImportedMethodPointerCore(pool, module, methodName);
-#endif
-        }
-
-#if NET8_0_OR_GREATER
-        [Inline(InlineBehavior.Remove)]
-        private static void* GetImportedMethodPointerCore_Internal(string? dllName, string methodName)
-            => GetImportedMethodPointerCore(dllName, methodName);
-#else
-        private static void* GetImportedMethodPointerCore_Internal(string? dllName, string methodName)
-        {
-            IntPtr module = dllName is null ? GetMainProgramHandle() : LoadLibrary(dllName);
-
-            ArrayPool<byte> pool = ArrayPool<byte>.Shared;
-            if (pool is ArrayPool<byte>.SystemBufferImpl)
-                return GetImportedMethodPointerCore(pool, module, methodName);
-
-            return GetImportedMethodPointerCore(module, methodName);
-        }
-#endif
-
-        public static void*[] GetImportedMethodPointersCore(string? dllName, ParamArrayTiny<int> methodIndices)
-        {
-            IntPtr module = dllName is null ? GetMainProgramHandle() : LoadLibrary(dllName);
-
-            int length = methodIndices.Length;
-            void*[] pointers = new void*[length];
-
-            for (int i = 0; i < length; i++)
-            {
-                int methodIndex = methodIndices[i];
-                pointers[i] = GetProcAddress(module, (byte*)methodIndex);
-            }
-
-            return pointers;
-        }
-
-        private static void*[] GetImportedMethodPointersCore(string? dllName, ParamArrayTiny<string> methodNames)
-        {
-            int length = methodNames.Length;
-            if (length <= 0)
-                return [];
-
-            IntPtr module = dllName is null ? GetMainProgramHandle() : LoadLibrary(dllName);
-            void*[] pointers = new void*[length];
-
-#if NET8_0_OR_GREATER
-            int i = 0;
-            do
-            {
-                string methodName = methodNames[i];
-                pointers[i] = GetImportedMethodPointerCore(module, methodName);
-            } while (++i < length);
-#else
-            ArrayPool<byte> pool = ArrayPool<byte>.Shared;
-
-            int i = 0;
-            do
-            {
-                string methodName = methodNames[i];
-                pointers[i] = GetImportedMethodPointerCore(pool, module, methodName);
-            } while (++i < length);
-#endif
-
-            return pointers;
-        }
-
-#if !NET8_0_OR_GREATER
-        private static void* GetImportedMethodPointerCore(ArrayPool<byte> pool, IntPtr module, string methodName)
-        {
-            int length = methodName.Length;
-            byte[] buffer = pool.Rent(length + 1);
-            try
-            {
-                fixed (char* source = methodName)
-                fixed (byte* destination = buffer)
-                {
-                    AsciiEncodingHelper.ReadFromUtf16Buffer(source, source + length, destination, destination + length);
-                    destination[length] = 0;
-                    return GetProcAddress(module, destination);
-                }
-            }
-            finally
-            {
-                pool.Return(buffer);
-            }
-        }
-#endif
-
-        private static void* GetImportedMethodPointerCore(IntPtr module, string methodName)
-        {
-#if NET8_0_OR_GREATER
-            return NativeLibrary.TryGetExport(module, methodName, out module) ? module.ToPointer() : null;
-#else
-            int length = methodName.Length;
-            byte[] buffer = new byte[length + 1];
-            fixed (char* source = methodName)
-            fixed (byte* destination = buffer)
-            {
-                AsciiEncodingHelper.ReadFromUtf16Buffer(source, source + length, destination, destination + length);
-                destination[length] = 0;
-                return GetProcAddress(module, destination);
-            }
-#endif
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static IntPtr GetMainProgramHandle()
-        {
-#if NET8_0_OR_GREATER
-            return NativeLibrary.GetMainProgramHandle();
-#else
-            return GetModuleHandleW(null);
-#endif
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static IntPtr LoadLibrary(string lpLibFileName)
-        {
-#if NET8_0_OR_GREATER
-            return NativeLibrary.TryLoad(lpLibFileName, out IntPtr result) ? result : IntPtr.Zero;
-#else
-            fixed (char* ptr = lpLibFileName)
-                return LoadLibraryW(ptr);
-#endif
-        }
+        public static partial void*[] GetImportedMethodPointers(string? dllName, in ParamArrayTiny<string> methodNames);
 
         private static bool LegacyWait(IntPtr waitingHandle, uint timeout)
         {

@@ -20,10 +20,10 @@ public static unsafe partial class NativeMethods
     private static INativeMethodInstance GetOSDependedInstance()
     {
         if (PlatformHelper.IsWindows)
-            return new Win32NativeMethodInstance();
+            return new Win32Instance();
         if (PlatformHelper.IsUnix)
-            return new UnixNativeMethodInstance();
-        return new FallbackNativeMethodInstance();
+            return new UnixInstance();
+        return new FallbackInstance();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -38,27 +38,27 @@ public static unsafe partial class NativeMethods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint GetCurrentThreadIdCore() => _methodInstance switch
     {
-        Win32NativeMethodInstance inst => inst.GetCurrentThreadId(),
-        UnixNativeMethodInstance inst => inst.GetCurrentThreadId(),
-        FallbackNativeMethodInstance inst => inst.GetCurrentThreadId(),
+        Win32Instance => Win32Instance.GetCurrentThreadId(),
+        UnixInstance => UnixInstance.GetCurrentThreadId(),
+        FallbackInstance => FallbackInstance.GetCurrentThreadId(),
         _ => _methodInstance.GetCurrentThreadId()
     };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint GetCurrentProcessorId() => _methodInstance switch
     {
-        Win32NativeMethodInstance inst => inst.GetCurrentProcessorId(),
-        UnixNativeMethodInstance inst => inst.GetCurrentProcessorId(),
-        FallbackNativeMethodInstance inst => inst.GetCurrentProcessorId(),
+        Win32Instance => Win32Instance.GetCurrentProcessorId(),
+        UnixInstance => UnixInstance.GetCurrentProcessorId(),
+        FallbackInstance => FallbackInstance.GetCurrentProcessorId(),
         _ => _methodInstance.GetCurrentProcessorId()
     };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong GetTicksForSystem() => _methodInstance switch
     {
-        Win32NativeMethodInstance inst => inst.GetTicksForSystem(),
-        UnixNativeMethodInstance inst => inst.GetTicksForSystem(),
-        FallbackNativeMethodInstance inst => inst.GetTicksForSystem(),
+        Win32Instance => Win32Instance.GetTicksForSystem(),
+        UnixInstance => UnixInstance.GetTicksForSystem(),
+        FallbackInstance => FallbackInstance.GetTicksForSystem(),
         _ => _methodInstance.GetTicksForSystem()
     };
 
@@ -69,9 +69,9 @@ public static unsafe partial class NativeMethods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IntPtr CreateWaitingHandle(bool initialState, bool autoReset) => _methodInstance switch
     {
-        Win32NativeMethodInstance inst => inst.CreateWaitingHandle(initialState, autoReset),
-        UnixNativeMethodInstance inst => inst.CreateWaitingHandle(initialState, autoReset),
-        FallbackNativeMethodInstance inst => inst.CreateWaitingHandle(initialState, autoReset),
+        Win32Instance => Win32Instance.CreateWaitingHandle(initialState, autoReset),
+        UnixInstance => UnixInstance.CreateWaitingHandle(initialState, autoReset),
+        FallbackInstance => FallbackInstance.CreateWaitingHandle(initialState, autoReset),
         _ => _methodInstance.CreateWaitingHandle(initialState, autoReset)
     };
 
@@ -80,14 +80,14 @@ public static unsafe partial class NativeMethods
     {
         switch (_methodInstance)
         {
-            case Win32NativeMethodInstance inst:
-                inst.ResetWaitingHandle(handle);
+            case Win32Instance:
+                Win32Instance.ResetWaitingHandle(handle);
                 break;
-            case UnixNativeMethodInstance inst:
-                inst.ResetWaitingHandle(handle);
+            case UnixInstance:
+                UnixInstance.ResetWaitingHandle(handle);
                 break;
-            case FallbackNativeMethodInstance inst:
-                inst.ResetWaitingHandle(handle);
+            case FallbackInstance:
+                FallbackInstance.ResetWaitingHandle(handle);
                 break;
             default:
                 _methodInstance.ResetWaitingHandle(handle);
@@ -100,14 +100,14 @@ public static unsafe partial class NativeMethods
     {
         switch (_methodInstance)
         {
-            case Win32NativeMethodInstance inst:
-                inst.SetWaitingHandle(handle);
+            case Win32Instance:
+                Win32Instance.SetWaitingHandle(handle);
                 break;
-            case UnixNativeMethodInstance inst:
-                inst.SetWaitingHandle(handle);
+            case UnixInstance:
+                UnixInstance.SetWaitingHandle(handle);
                 break;
-            case FallbackNativeMethodInstance inst:
-                inst.SetWaitingHandle(handle);
+            case FallbackInstance:
+                FallbackInstance.SetWaitingHandle(handle);
                 break;
             default:
                 _methodInstance.SetWaitingHandle(handle);
@@ -120,14 +120,14 @@ public static unsafe partial class NativeMethods
     {
         switch (_methodInstance)
         {
-            case Win32NativeMethodInstance inst:
-                inst.DestroyWaitingHandle(handle);
+            case Win32Instance:
+                Win32Instance.DestroyWaitingHandle(handle);
                 break;
-            case UnixNativeMethodInstance inst:
-                inst.DestroyWaitingHandle(handle);
+            case UnixInstance:
+                UnixInstance.DestroyWaitingHandle(handle);
                 break;
-            case FallbackNativeMethodInstance inst:
-                inst.DestroyWaitingHandle(handle);
+            case FallbackInstance:
+                FallbackInstance.DestroyWaitingHandle(handle);
                 break;
             default:
                 _methodInstance.DestroyWaitingHandle(handle);
@@ -147,45 +147,45 @@ public static unsafe partial class NativeMethods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool WaitForWaitingHandle(IntPtr handle, uint timeout) => _methodInstance switch
     {
-        Win32NativeMethodInstance inst => inst.WaitForWaitingHandle(handle, timeout),
-        UnixNativeMethodInstance inst => inst.WaitForWaitingHandle(handle, timeout),
-        FallbackNativeMethodInstance inst => inst.WaitForWaitingHandle(handle, timeout),
+        Win32Instance => Win32Instance.WaitForWaitingHandle(handle, timeout),
+        UnixInstance => UnixInstance.WaitForWaitingHandle(handle, timeout),
+        FallbackInstance => FallbackInstance.WaitForWaitingHandle(handle, timeout),
         _ => _methodInstance.WaitForWaitingHandle(handle, timeout)
     };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool SleepInRelativeTicks(ulong ticks) => _methodInstance switch
     {
-        Win32NativeMethodInstance inst => inst.SleepInRelativeTicks(ticks),
-        UnixNativeMethodInstance inst => inst.SleepInRelativeTicks(ticks),
-        FallbackNativeMethodInstance inst => inst.SleepInRelativeTicks(ticks),
+        Win32Instance => Win32Instance.SleepInRelativeTicks(ticks),
+        UnixInstance => UnixInstance.SleepInRelativeTicks(ticks),
+        FallbackInstance => FallbackInstance.SleepInRelativeTicks(ticks),
         _ => _methodInstance.SleepInRelativeTicks(ticks)
     };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool SleepInAbsoluteTicks(ulong ticks) => _methodInstance switch
     {
-        Win32NativeMethodInstance inst => inst.SleepInAbsoluteTicks(ticks),
-        UnixNativeMethodInstance inst => inst.SleepInAbsoluteTicks(ticks),
-        FallbackNativeMethodInstance inst => inst.SleepInAbsoluteTicks(ticks),
+        Win32Instance => Win32Instance.SleepInAbsoluteTicks(ticks),
+        UnixInstance => UnixInstance.SleepInAbsoluteTicks(ticks),
+        FallbackInstance => FallbackInstance.SleepInAbsoluteTicks(ticks),
         _ => _methodInstance.SleepInAbsoluteTicks(ticks)
     };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void* GetImportedMethodPointer(string dllName, int methodIndex) => _methodInstance switch
     {
-        Win32NativeMethodInstance inst => inst.GetImportedMethodPointer(dllName, methodIndex),
-        UnixNativeMethodInstance inst => inst.GetImportedMethodPointer(dllName, methodIndex),
-        FallbackNativeMethodInstance inst => inst.GetImportedMethodPointer(dllName, methodIndex),
+        Win32Instance => Win32Instance.GetImportedMethodPointer(dllName, methodIndex),
+        UnixInstance => UnixInstance.GetImportedMethodPointer(dllName, methodIndex),
+        FallbackInstance => FallbackInstance.GetImportedMethodPointer(dllName, methodIndex),
         _ => _methodInstance.GetImportedMethodPointer(dllName, methodIndex)
     };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void* GetImportedMethodPointer(string dllName, string methodName) => _methodInstance switch
     {
-        Win32NativeMethodInstance inst => inst.GetImportedMethodPointer(dllName, methodName),
-        UnixNativeMethodInstance inst => inst.GetImportedMethodPointer(dllName, methodName),
-        FallbackNativeMethodInstance inst => inst.GetImportedMethodPointer(dllName, methodName),
+        Win32Instance => Win32Instance.GetImportedMethodPointer(dllName, methodName),
+        UnixInstance => UnixInstance.GetImportedMethodPointer(dllName, methodName),
+        FallbackInstance => FallbackInstance.GetImportedMethodPointer(dllName, methodName),
         _ => _methodInstance.GetImportedMethodPointer(dllName, methodName)
     };
 
@@ -224,18 +224,18 @@ public static unsafe partial class NativeMethods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void*[] GetImportedMethodPointers(string dllName, in ParamArrayTiny<int> methodIndices) => _methodInstance switch
     {
-        Win32NativeMethodInstance inst => inst.GetImportedMethodPointers(dllName, methodIndices),
-        UnixNativeMethodInstance inst => inst.GetImportedMethodPointers(dllName, methodIndices),
-        FallbackNativeMethodInstance inst => inst.GetImportedMethodPointers(dllName, methodIndices),
+        Win32Instance => Win32Instance.GetImportedMethodPointers(dllName, methodIndices),
+        UnixInstance => UnixInstance.GetImportedMethodPointers(dllName, methodIndices),
+        FallbackInstance => FallbackInstance.GetImportedMethodPointers(dllName, methodIndices),
         _ => _methodInstance.GetImportedMethodPointers(dllName, methodIndices)
     };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void*[] GetImportedMethodPointers(string dllName, in ParamArrayTiny<string> methodNames) => _methodInstance switch
     {
-        Win32NativeMethodInstance inst => inst.GetImportedMethodPointers(dllName, methodNames),
-        UnixNativeMethodInstance inst => inst.GetImportedMethodPointers(dllName, methodNames),
-        FallbackNativeMethodInstance inst => inst.GetImportedMethodPointers(dllName, methodNames),
+        Win32Instance => Win32Instance.GetImportedMethodPointers(dllName, methodNames),
+        UnixInstance => UnixInstance.GetImportedMethodPointers(dllName, methodNames),
+        FallbackInstance => FallbackInstance.GetImportedMethodPointers(dllName, methodNames),
         _ => _methodInstance.GetImportedMethodPointers(dllName, methodNames)
     };
 }
