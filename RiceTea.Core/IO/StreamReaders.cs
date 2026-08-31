@@ -34,7 +34,7 @@ public static partial class StreamReaders
     [Inline(InlineBehavior.Keep, export: true)]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IStreamReader CreateStreamReader(Stream stream, Encoding encoding, int bufferSize, bool leaveOpen)
-        => CreateStreamReader(stream, detectEncodingFromByteOrderMarks: false, encoding, bufferSize, leaveOpen: false);
+        => CreateStreamReader(stream, detectEncodingFromByteOrderMarks: false, encoding, bufferSize, leaveOpen);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IStreamReader CreateStreamReader(Stream stream, bool detectEncodingFromByteOrderMarks, Encoding encoding, int bufferSize, bool leaveOpen)
