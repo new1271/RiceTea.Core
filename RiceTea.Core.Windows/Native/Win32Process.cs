@@ -73,11 +73,11 @@ public sealed partial class Win32Process : CriticalFinalizerObject, IDisposable
 
     public string ImageName => _nameLazy.Value;
 
-    public Stream In => _stdIn;
+    public Stream StandardInput => _stdIn;
 
-    public Stream Out => _stdOut;
+    public Stream StandardOutput => _stdOut;
 
-    public Stream Error => _stdErr;
+    public Stream StandardError => _stdErr;
 
     private Win32Process(string? workingDirectory, uint id, IntPtr handle, bool keepHandleWhenDisposing)
     {
