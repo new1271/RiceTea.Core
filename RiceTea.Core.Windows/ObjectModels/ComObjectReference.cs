@@ -75,10 +75,7 @@ public unsafe ref struct ComObjectReference<T> : IUnknown where T : ComObject, n
     public T GetAndDispose()
     {
         void* handle = Cells.Exchange(ref _handle, null);
-        T? result = NativeObject.FromNativePointer<T>(handle, _type);
-        if (result is null)
-            throw new ObjectDisposedException(nameof(NativeObjectReference<>));
-        return result;
+        return NativeObject.FromNativePointer<T>(handle, _type) ?? ObjectDisposedException.Throw<T>(nameof(NativeObjectReference<>));
     }
 
     public void Dispose()
