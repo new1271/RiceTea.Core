@@ -83,10 +83,12 @@ unsafe partial class SequenceHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [OverloadResolutionPriority(2)]
     public static bool Equals(void* ptr, void* ptr2, nuint length)
         => EqualsCore(ptr, ptr2, length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [OverloadResolutionPriority(1)]
     public static bool Equals<T>(T* ptr, T* ptr2, nuint length)
         => EqualsCore<T>(ptr, ptr2, length);
 

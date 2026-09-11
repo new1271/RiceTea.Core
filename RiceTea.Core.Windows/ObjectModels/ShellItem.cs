@@ -35,7 +35,7 @@ public unsafe class ShellItem : ComObject
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryCreate(Environment.SpecialFolder folder, [NotNullWhen(true)] out ShellItem? result) 
+    public static bool TryCreate(Environment.SpecialFolder folder, [NotNullWhen(true)] out ShellItem? result)
         => TryCreate(Environment.GetFolderPath(folder), out result);
 
     public static bool TryCreate(string path, [NotNullWhen(true)] out ShellItem? result)
@@ -50,9 +50,12 @@ public unsafe class ShellItem : ComObject
         return true;
     }
 
-    [SkipLocalsInit]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int TryCreateCore(string path, out void* result)
-        => Shell32.SHCreateItemFromParsingName(path, null, IID_ShellItem, UnsafeHelper.AsPointerOut(out result));
+    {
+        fixed (void** ptr = &result)
+            return Shell32.SHCreateItemFromParsingName(path, null, IID_ShellItem, ptr);
+    }
 
     public ShellItem() : base() { }
 
@@ -63,6 +66,7 @@ public unsafe class ShellItem : ComObject
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.GetDisplayName);
         int hr = ((delegate* unmanaged[Stdcall]<void*, ShellItemGetDisplayName, char**, int>)functionPointer)(nativePointer, sigdnName, (char**)&nativePointer);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr, nativePointer);
         try
         {

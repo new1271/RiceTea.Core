@@ -451,47 +451,11 @@ public static unsafe partial class UnsafeHelper
     /// <inheritdoc cref="Unsafe.AsPointer{T}(ref T)"/>
     [Inline(InlineBehavior.Keep, export: true)]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial T* AsPointerRef<T>(ref T value) => (T*)Unsafe.AsPointer(ref value);
+    public static partial T* AsPointer<T>(ref T value) => (T*)Unsafe.AsPointer(ref value);
 
     /// <inheritdoc cref="Unsafe.AsPointer{T}(ref T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial void** AsPointerRef(ref void* value)
-    {
-        IL.Emit.Ldarg_0();
-        IL.Emit.Ret();
-        throw IL.Unreachable();
-    }
-
-    /// <inheritdoc cref="Unsafe.AsPointer{T}(ref T)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial T* AsPointerIn<T>(in T value)
-    {
-        IL.Emit.Ldarg_0();
-        IL.Emit.Ret();
-        throw IL.Unreachable();
-    }
-
-    /// <inheritdoc cref="Unsafe.AsPointer{T}(ref T)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial void** AsPointerIn(in void* value)
-    {
-        IL.Emit.Ldarg_0();
-        IL.Emit.Ret();
-        throw IL.Unreachable();
-    }
-
-    /// <inheritdoc cref="Unsafe.AsPointer{T}(ref T)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial T* AsPointerOut<T>(out T value)
-    {
-        IL.PushOutRef(out value);
-        IL.Emit.Ret();
-        throw IL.Unreachable();
-    }
-
-    /// <inheritdoc cref="Unsafe.AsPointer{T}(ref T)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial void** AsPointerOut(out void* value)
+    public static partial void** AsPointer(ref void* value)
     {
         IL.Emit.Ldarg_0();
         IL.Emit.Ret();

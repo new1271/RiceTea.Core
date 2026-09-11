@@ -34,69 +34,87 @@ unsafe partial class NativeObject
     {
         if (obj is null)
             return null;
-        lock (obj)
-        {
-            if (obj.IsEmpty || obj.IsDisposed)
-                return null;
-            return CloneCore(obj, obj.ReferenceType);
-        }
+        return CloneCore(obj);
     }
 
     public static T? Clone<T>(T? obj) where T : NativeObject, new()
     {
         if (obj is null)
             return null;
-        lock (obj)
+        return CloneCore(obj);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static NativeObject? CloneCore(NativeObject obj)
+    {
+        void* nativePointer = obj.NativePointer;
+        ReferenceType referenceType = obj.ReferenceType;
+        obj.AfterPointerCopied();
+        try
         {
-            if (obj.IsEmpty || obj.IsDisposed)
-                return null;
-            return CloneCore(obj, obj.ReferenceType);
+            NativeObject? newObj = FromNativePointer(obj.GetType(), nativePointer, referenceType);
+            if (newObj is null)
+                goto Failed;
+            return newObj;
         }
+        catch (Exception)
+        {
+            goto Failed;
+        }
+
+    Failed:
+        obj.ReleasePointer(nativePointer);
+        return null;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static NativeObject? CloneCore(NativeObject obj, ReferenceType pointerType)
+    private static T? CloneCore<T>(T obj) where T : NativeObject, new()
     {
-        NativeObject? newObj = FromNativePointer(obj.GetType(), obj._nativePointer, pointerType);
-        if (newObj is null)
-            return null;
-        if (pointerType == ReferenceType.Owned)
-            newObj.AfterPointerCopied();
-        return newObj;
-    }
+        void* nativePointer = obj.NativePointer;
+        ReferenceType referenceType = obj.ReferenceType;
+        obj.AfterPointerCopied();
+        try
+        {
+            T? newObj = FromNativePointer<T>(nativePointer, referenceType);
+            if (newObj is null)
+                goto Failed;
+            return newObj;
+        }
+        catch (Exception)
+        {
+            goto Failed;
+        }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static T? CloneCore<T>(T obj, ReferenceType pointerType) where T : NativeObject, new()
-    {
-        T? newObj = FromNativePointer<T>(obj._nativePointer, pointerType);
-        if (newObj is null)
-            return null;
-        if (pointerType == ReferenceType.Owned)
-            newObj.AfterPointerCopied();
-        return newObj;
+    Failed:
+        obj.ReleasePointer(nativePointer);
+        return null;
     }
 
     public static NativeObjectReference<T> CloneLater<T>(T? obj) where T : NativeObject, new()
     {
         if (obj is null)
             return default;
-        lock (obj)
-        {
-            if (obj.IsEmpty || obj.IsDisposed)
-                return default;
-            return CloneLaterCore(obj, obj.ReferenceType);
-        }
+        return CloneLaterCore(obj);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static NativeObjectReference<T> CloneLaterCore<T>(T obj, ReferenceType pointerType) where T : NativeObject, new()
+    private static NativeObjectReference<T> CloneLaterCore<T>(T obj) where T : NativeObject, new()
     {
-        void* nativePointer = obj._nativePointer;
-        if (nativePointer is null)
-            return default;
-        if (pointerType == ReferenceType.Owned)
-            obj.AfterPointerCopied();
-        return new NativeObjectReference<T>(nativePointer, pointerType);
+        void* nativePointer = obj.NativePointer;
+        ReferenceType referenceType = obj.ReferenceType;
+        obj.AfterPointerCopied();
+        try
+        {
+            return new NativeObjectReference<T>(nativePointer, referenceType);
+        }
+        catch (Exception)
+        {
+            goto Failed;
+        }
+
+    Failed:
+        obj.ReleasePointer(nativePointer);
+        return default;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

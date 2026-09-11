@@ -28,8 +28,9 @@ unsafe partial class ComObject
     internal static int QueryInterfaceCore(ref void* nativePointer, in Guid iid)
     {
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.QueryInterface);
-        return ((delegate* unmanaged[Stdcall]<void*, Guid*, void**, int>)functionPointer)(nativePointer, 
-            UnsafeHelper.AsPointerIn(in iid), UnsafeHelper.AsPointerRef(ref nativePointer));
+        fixed (Guid* riid = &iid)
+        fixed (void** pResult = &nativePointer)
+            return ((delegate* unmanaged[Stdcall]<void*, Guid*, void**, int>)functionPointer)(nativePointer, riid, pResult);
     }
 
     [Inline(InlineBehavior.Remove)]

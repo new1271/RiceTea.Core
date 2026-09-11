@@ -55,7 +55,7 @@ public struct Rect : IEquatable<Rect>
     public int X
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        readonly get => Left; 
+        readonly get => Left;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => Left = value;
     }
@@ -63,7 +63,7 @@ public struct Rect : IEquatable<Rect>
     public int Y
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        readonly get => Top; 
+        readonly get => Top;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => Top = value;
     }
@@ -169,8 +169,8 @@ public struct Rect : IEquatable<Rect>
     public readonly bool Contains(Point point) => Contains(point.X, point.Y);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool Contains(PointF point) => Contains(point.X, point.Y); 
-    
+    public readonly bool Contains(PointF point) => Contains(point.X, point.Y);
+
     public readonly bool Contains(in Rectangle rect)
     {
         if (X <= rect.X && rect.X + rect.Width <= Right && Y <= rect.Y)
@@ -217,8 +217,39 @@ public struct Rect : IEquatable<Rect>
     public override readonly bool Equals(object? obj) => obj is Rect other && Equals(other);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly unsafe bool Equals(Rect other) 
-        => SequenceHelper.Equals(UnsafeHelper.AsPointerIn(this), UnsafeHelper.AsPointerIn(other), sizeof(Rect));
+    public readonly unsafe bool Equals(in Rect other) => EqualsCore(this, other);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly unsafe bool Equals(Rect other) => EqualsCore(this, other);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static unsafe bool EqualsCore(in Rect a, in Rect b)
+    {
+        const int V128ByteCount = 128 / 8;
+
+        fixed (Rect* ptr = &a, ptr2 = &b)
+        {
+#if NET8_0_OR_GREATER
+            if (Limits.UseVector128())
+                return System.Runtime.Intrinsics.Vector128.Load((int*)ptr) == System.Runtime.Intrinsics.Vector128.Load((int*)ptr2);
+#else
+            if (Limits.UseVector())
+            {
+                switch (System.Numerics.Vector<byte>.Count)
+                {
+                    case V128ByteCount:
+                        return _V128((byte*)ptr, (byte*)ptr2);
+                }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                static bool _V128(byte* ptr, byte* ptr2)
+                    => UnsafeHelper.Read<System.Numerics.Vector<int>>(ptr) == UnsafeHelper.Read<System.Numerics.Vector<int>>(ptr2);
+            }
+#endif      
+
+            return SequenceHelper.Equals(ptr, ptr2, V128ByteCount);
+        }
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override readonly int GetHashCode()

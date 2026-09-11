@@ -182,8 +182,39 @@ public struct RectU : IEquatable<RectU>
     public override readonly bool Equals(object? obj) => obj is RectU other && Equals(other);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly unsafe bool Equals(RectU other)
-        => SequenceHelper.Equals(UnsafeHelper.AsPointerIn(this), UnsafeHelper.AsPointerIn(other), sizeof(RectU));
+    public readonly unsafe bool Equals(in RectU other) => EqualsCore(this, other);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly unsafe bool Equals(RectU other) => EqualsCore(this, other);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static unsafe bool EqualsCore(in RectU a, in RectU b)
+    {
+        const int V128ByteCount = 128 / 8;
+
+        fixed (RectU* ptr = &a, ptr2 = &b)
+        {
+#if NET8_0_OR_GREATER
+            if (Limits.UseVector128())
+                return System.Runtime.Intrinsics.Vector128.Load((uint*)ptr) == System.Runtime.Intrinsics.Vector128.Load((uint*)ptr2);
+#else
+            if (Limits.UseVector())
+            {
+                switch (System.Numerics.Vector<byte>.Count)
+                {
+                    case V128ByteCount:
+                        return _V128((byte*)ptr, (byte*)ptr2);
+                }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                static bool _V128(byte* ptr, byte* ptr2)
+                    => UnsafeHelper.Read<System.Numerics.Vector<uint>>(ptr) == UnsafeHelper.Read<System.Numerics.Vector<uint>>(ptr2);
+            }
+#endif      
+
+            return SequenceHelper.Equals(ptr, ptr2, V128ByteCount);
+        }
+    }
 
     public override readonly int GetHashCode() => unchecked((int)(Left ^ Top ^ Right ^ Bottom));
 

@@ -59,10 +59,10 @@ partial class InternalSequenceHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static unsafe int FindIndexForResultVector<T>(in Vector<T> vector) where T : unmanaged
     {
-        ulong* ptrVector = (ulong*)UnsafeHelper.AsPointerIn(in vector);
+        ref readonly ulong reference = ref UnsafeHelper.As<Vector<T>, ulong>(ref UnsafeHelper.AsRefIn(in vector));
         for (int i = 0; i < Vector<ulong>.Count; i++)
         {
-            int result = MathHelper.TrailingZeroCount(ptrVector[i]);
+            int result = MathHelper.TrailingZeroCount(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, i));
             if (result == sizeof(ulong) * 8)
                 continue;
             return i * (sizeof(ulong) / sizeof(T)) + result / sizeof(T) / 8;

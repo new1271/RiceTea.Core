@@ -3,8 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security;
 
-using InlineMethod;
-
 using RiceTea.Core.Helpers;
 
 namespace RiceTea.Core.Structures;
@@ -90,12 +88,44 @@ public unsafe struct BitVector256 : IComparable<BitVector256>, IEquatable<BitVec
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool Equals(BitVector256 vector) => EqualsCore(this, vector);
 
-    [Inline(InlineBehavior.Remove)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool EqualsCore(in BitVector256 vector, in BitVector256 vector2)
     {
-        ulong* ptr = (ulong*)UnsafeHelper.AsPointerIn(in vector);
-        ulong* ptr2 = (ulong*)UnsafeHelper.AsPointerIn(in vector2);
-        return SequenceHelper.Equals(ptr, ptr + ArrayCount, ptr2);
+        const int V256ByteCount = 256 / 8;
+        const int V128ByteCount = 128 / 8;
+
+        fixed (BitVector256* ptr = &vector, ptr2 = &vector2)
+        {
+#if NET8_0_OR_GREATER
+            if (Limits.UseVector256())
+                return System.Runtime.Intrinsics.Vector256.Load((byte*)ptr) == System.Runtime.Intrinsics.Vector256.Load((byte*)ptr2);
+            if (Limits.UseVector128())
+                return (System.Runtime.Intrinsics.Vector128.Load((byte*)ptr) == System.Runtime.Intrinsics.Vector128.Load((byte*)ptr2)) &&
+                    (System.Runtime.Intrinsics.Vector128.Load((byte*)ptr + V128ByteCount) == System.Runtime.Intrinsics.Vector128.Load((byte*)ptr2 + V128ByteCount));
+#else
+            if (Limits.UseVector())
+            {
+                switch (System.Numerics.Vector<byte>.Count)
+                {
+                    case V256ByteCount:
+                        return _V256((byte*)ptr, (byte*)ptr2);
+                    case V128ByteCount:
+                        return _V128((byte*)ptr, (byte*)ptr2);
+                }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                static bool _V256(byte* ptr, byte* ptr2)
+                    => UnsafeHelper.Read<System.Numerics.Vector<byte>>(ptr) == UnsafeHelper.Read<System.Numerics.Vector<byte>>(ptr2);
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                static bool _V128(byte* ptr, byte* ptr2)
+                    => (UnsafeHelper.Read<System.Numerics.Vector<byte>>(ptr) == UnsafeHelper.Read<System.Numerics.Vector<byte>>(ptr2)) &&
+                    (UnsafeHelper.Read<System.Numerics.Vector<byte>>(ptr + V128ByteCount) == UnsafeHelper.Read<System.Numerics.Vector<byte>>(ptr2 + V128ByteCount));
+            }
+#endif      
+
+            return SequenceHelper.Equals(ptr, ptr2, V256ByteCount);
+        }
     }
 
     public readonly int CompareTo(BitVector256 other)

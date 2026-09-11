@@ -169,17 +169,9 @@ public static unsafe partial class UnsafeHelper
 
     public static partial ref T AsRefOut<T>(out T source);
 
-    public static partial T* AsPointerRef<T>(ref T value);
+    public static partial T* AsPointer<T>(ref T value);
 
-    public static partial void** AsPointerRef(ref void* value);
-
-    public static partial T* AsPointerIn<T>(in T value);
-
-    public static partial void** AsPointerIn(in void* value);
-
-    public static partial T* AsPointerOut<T>(out T value);
-
-    public static partial void** AsPointerOut(out void* value);
+    public static partial void** AsPointer(ref void* value);
 
     public static partial ref readonly char GetStringDataReference(string str);
 

@@ -79,6 +79,7 @@ public unsafe sealed class FileDialog : ModalWindow
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.SetFileTypes);
         int hr = ((delegate* unmanaged[Stdcall]<void*, uint, FileDialogFilterSpecification*, int>)functionPointer)(nativePointer, cFileTypes, rgFilterSpec);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr);
     }
 
@@ -87,6 +88,7 @@ public unsafe sealed class FileDialog : ModalWindow
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.SetFileTypeIndex);
         int hr = ((delegate* unmanaged[Stdcall]<void*, uint, int>)functionPointer)(nativePointer, iFileType);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr);
     }
 
@@ -97,6 +99,7 @@ public unsafe sealed class FileDialog : ModalWindow
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.GetFileTypeIndex);
         int hr = ((delegate* unmanaged[Stdcall]<void*, uint*, int>)functionPointer)(nativePointer, &iFileType);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr);
         return iFileType;
     }
@@ -108,6 +111,7 @@ public unsafe sealed class FileDialog : ModalWindow
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.GetOptions);
         int hr = ((delegate* unmanaged[Stdcall]<void*, FileOpenDialogOptions*, int>)functionPointer)(nativePointer, &result);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr);
         return result;
     }
@@ -117,22 +121,25 @@ public unsafe sealed class FileDialog : ModalWindow
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.SetOptions);
         int hr = ((delegate* unmanaged[Stdcall]<void*, FileOpenDialogOptions, int>)functionPointer)(nativePointer, fos);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr);
     }
 
-    public void SetDefaultFolder(ShellItem item)
+    public void SetDefaultFolder(ShellItem? item)
     {
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.SetDefaultFolder);
-        int hr = ((delegate* unmanaged[Stdcall]<void*, void*, int>)functionPointer)(nativePointer, item == null ? null : item.NativePointer);
+        int hr = ((delegate* unmanaged[Stdcall]<void*, void*, int>)functionPointer)(nativePointer, item is null ? null : item.NativePointer);
+        AfterUnmanagedCall(item);
         ThrowHelper.ThrowExceptionForHR(hr);
     }
 
-    public void SetFolder(ShellItem item)
+    public void SetFolder(ShellItem? item)
     {
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.SetFolder);
-        int hr = ((delegate* unmanaged[Stdcall]<void*, void*, int>)functionPointer)(nativePointer, item == null ? null : item.NativePointer);
+        int hr = ((delegate* unmanaged[Stdcall]<void*, void*, int>)functionPointer)(nativePointer, item is null ? null : item.NativePointer);
+        AfterUnmanagedCall(item);
         ThrowHelper.ThrowExceptionForHR(hr);
     }
 
@@ -142,6 +149,7 @@ public unsafe sealed class FileDialog : ModalWindow
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.GetFolder);
         int hr = ((delegate* unmanaged[Stdcall]<void*, void**, int>)functionPointer)(nativePointer, &nativePointer);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr, nativePointer);
         return new ShellItem(nativePointer, ReferenceType.Owned);
     }
@@ -153,6 +161,7 @@ public unsafe sealed class FileDialog : ModalWindow
         fixed (char* ptr = filename)
         {
             int hr = ((delegate* unmanaged[Stdcall]<void*, void*, int>)functionPointer)(nativePointer, ptr);
+            AfterUnmanagedCall();
             ThrowHelper.ThrowExceptionForHR(hr);
         }
     }
@@ -163,6 +172,7 @@ public unsafe sealed class FileDialog : ModalWindow
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.GetFileName);
         int hr = ((delegate* unmanaged[Stdcall]<void*, void**, int>)functionPointer)(nativePointer, &nativePointer);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr, nativePointer);
         try
         {
@@ -186,6 +196,7 @@ public unsafe sealed class FileDialog : ModalWindow
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.SetTitle);
         int hr = ((delegate* unmanaged[Stdcall]<void*, char*, int>)functionPointer)(nativePointer, title);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr);
     }
 
@@ -195,6 +206,7 @@ public unsafe sealed class FileDialog : ModalWindow
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.GetResult);
         int hr = ((delegate* unmanaged[Stdcall]<void*, void**, int>)functionPointer)(nativePointer, &nativePointer);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr, nativePointer);
         return new ShellItem(nativePointer, ReferenceType.Owned);
     }
@@ -204,18 +216,23 @@ public unsafe sealed class FileDialog : ModalWindow
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.AddPlace);
         int hr = ((delegate* unmanaged[Stdcall]<void*, void*, FolderDirectionOfAddPlace, int>)functionPointer)(nativePointer, psi.NativePointer, fdap);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr, nativePointer);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetClientGuid(in Guid guid)
-        => SetClientGuid(UnsafeHelper.AsPointerIn(in guid));
+    {
+        fixed (Guid* refGuid = &guid)
+            SetClientGuid(refGuid);
+    }
 
     public void SetClientGuid(Guid* guid)
     {
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.SetClientGuid);
         int hr = ((delegate* unmanaged[Stdcall]<void*, Guid*, int>)functionPointer)(nativePointer, guid);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr, nativePointer);
     }
 
@@ -224,6 +241,7 @@ public unsafe sealed class FileDialog : ModalWindow
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.ClearClientData);
         int hr = ((delegate* unmanaged[Stdcall]<void*, int>)functionPointer)(nativePointer);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr, nativePointer);
     }
 }

@@ -144,6 +144,6 @@ partial class InternalSequenceHelper
 
     [Inline(InlineBehavior.Remove)]
     private static unsafe int FindIndexForResultVector<T>(in Vector64<T> vector) where T : unmanaged
-        => MathHelper.TrailingZeroCount(*(ulong*)UnsafeHelper.AsPointerIn(in vector)) / sizeof(T) / 8;
+        => MathHelper.TrailingZeroCount(vector.AsUInt64()[0]) / sizeof(T) / 8;
 }
 #endif

@@ -59,7 +59,7 @@ internal unsafe struct ThreadBlockingInfo
         _objectKind = objectKind;
         _timeoutMs = timeoutMs;
         _next = t_first;
-        t_first = UnsafeHelper.AsPointerRef(ref this);
+        t_first = UnsafeHelper.AsPointer(ref this);
     }
 
     private void Pop()
@@ -113,7 +113,7 @@ internal unsafe struct ThreadBlockingInfo
         private Scope(object obj, ObjectKind objectKind, int timeoutMs)
         {
             _object = obj;
-            _blockingInfo.Push(UnsafeHelper.AsPointerRef(ref _object), objectKind, timeoutMs);
+            _blockingInfo.Push(UnsafeHelper.AsPointer(ref _object), objectKind, timeoutMs);
         }
 
         public void Dispose()

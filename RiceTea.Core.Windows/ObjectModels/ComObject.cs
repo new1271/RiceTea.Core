@@ -45,6 +45,7 @@ public unsafe partial class ComObject : NativeObject, IUnknown, IWin32HandleHold
     {
         void* nativePointer = NativePointer;
         int hr = QueryInterfaceCore(ref nativePointer, iid);
+        AfterUnmanagedCall();
         if (throwWhenQueryFailed)
             ThrowHelper.ThrowExceptionForHR(hr, nativePointer);
         else
@@ -56,6 +57,7 @@ public unsafe partial class ComObject : NativeObject, IUnknown, IWin32HandleHold
     {
         void* nativePointer = NativePointer;
         int hr = QueryInterfaceCore(ref nativePointer, iid);
+        AfterUnmanagedCall();
         if (throwWhenQueryFailed)
             ThrowHelper.ThrowExceptionForHR(hr, nativePointer);
         else
@@ -67,6 +69,7 @@ public unsafe partial class ComObject : NativeObject, IUnknown, IWin32HandleHold
     {
         void* nativePointer = NativePointer;
         int hr = QueryInterfaceCore(ref nativePointer, guid);
+        AfterUnmanagedCall();
         if (hr < 0)
         {
             queriedObject = null;
@@ -80,6 +83,7 @@ public unsafe partial class ComObject : NativeObject, IUnknown, IWin32HandleHold
     {
         void* nativePointer = NativePointer;
         int hr = QueryInterfaceCore(ref nativePointer, guid);
+        AfterUnmanagedCall();
         if (hr < 0)
         {
             queriedObject = null;
@@ -101,13 +105,31 @@ public unsafe partial class ComObject : NativeObject, IUnknown, IWin32HandleHold
         return true;
     }
 
-    public uint AddRef() => AddRefCore(NativePointer);
+    public uint AddRef()
+    {
+        uint result = AddRefCore(NativePointer);
+        AfterUnmanagedCall();
+        return result;
+    }
 
-    public uint Release() => ReleaseCore(NativePointer);
+    public uint Release()
+    {
+        uint result = ReleaseCore(NativePointer);
+        AfterUnmanagedCall();
+        return result;
+    }
 
-    protected override void AfterPointerCopied() => AddRefCore(NativePointer);
+    protected override void AfterPointerCopied()
+    {
+        AddRefCore(NativePointer);
+        AfterUnmanagedCall();
+    }
 
-    protected override void ReleasePointer(void* pointer) => ReleaseCore(pointer);
+    protected override void ReleasePointer(void* pointer)
+    {
+        ReleaseCore(pointer);
+        AfterUnmanagedCall();
+    }
 
     void* IWin32HandleHolder.GetWin32Handle() => NativePointer;
 }

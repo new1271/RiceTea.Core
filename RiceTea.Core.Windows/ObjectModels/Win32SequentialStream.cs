@@ -40,19 +40,27 @@ public unsafe class Win32SequentialStream : ComObject, IWin32SequentialStream
         return result;
     }
 
-    public bool TryRead(byte* ptr, ulong length, out ulong byteRead) 
-        => ReadCore(ptr, length, UnsafeHelper.AsPointerOut(out byteRead)) >= 0;
+    public bool TryRead(byte* ptr, ulong length, out ulong byteRead)
+    {
+        fixed (ulong* pByteRead = &byteRead)
+            return ReadCore(ptr, length, pByteRead) >= 0;
+    }
 
     public bool TryWrite(byte* ptr, ulong length, out ulong byteWritten)
-        => WriteCore(ptr, length, UnsafeHelper.AsPointerOut(out byteWritten)) >= 0;
+    {
+        fixed (ulong* pByteWritten = &byteWritten)
+            return WriteCore(ptr, length, pByteWritten) >= 0;
+    }
 
     [Inline(InlineBehavior.Remove)]
     private int ReadCore(byte* ptr, ulong length, ulong* pByteRead)
     {
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.Read);
-        return ((delegate* unmanaged[Stdcall]<void*, byte*, ulong, ulong*, int>)functionPointer)(nativePointer,
+        int result = ((delegate* unmanaged[Stdcall]<void*, byte*, ulong, ulong*, int>)functionPointer)(nativePointer,
             ptr, length, pByteRead);
+        AfterUnmanagedCall();
+        return result;
     }
 
     [Inline(InlineBehavior.Remove)]
@@ -60,7 +68,9 @@ public unsafe class Win32SequentialStream : ComObject, IWin32SequentialStream
     {
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.Write);
-        return ((delegate* unmanaged[Stdcall]<void*, byte*, ulong, ulong*, int>)functionPointer)(nativePointer,
+        int result = ((delegate* unmanaged[Stdcall]<void*, byte*, ulong, ulong*, int>)functionPointer)(nativePointer,
             ptr, length, pByteWritten);
+        AfterUnmanagedCall();
+        return result;
     }
 }

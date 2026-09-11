@@ -233,9 +233,10 @@ public sealed partial class Win32Process : CriticalFinalizerObject, IDisposable
             }
             ptr[builder.Length] = '\0';
             fixed (char* pCurrentDirectory = workingDirectory)
+            fixed (StartupInfo* pStartupInfo = &startupInfo)
+            fixed (ProcessInformation* pProcessInformation = &processInformation)
             {
-                return Kernel32.CreateProcessW(null, ptr, null, null, inheritHandles, dwCreationFlags, null, pCurrentDirectory,
-                    UnsafeHelper.AsPointerIn(in startupInfo), UnsafeHelper.AsPointerOut(out processInformation));
+                return Kernel32.CreateProcessW(null, ptr, null, null, inheritHandles, dwCreationFlags, null, pCurrentDirectory, pStartupInfo, pProcessInformation);
             }
         }
         finally

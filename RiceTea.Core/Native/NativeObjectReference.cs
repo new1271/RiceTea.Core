@@ -6,6 +6,8 @@ namespace RiceTea.Core.Native;
 [StructLayout(LayoutKind.Auto)]
 public unsafe ref struct NativeObjectReference<T> : ICheckableDisposable where T : NativeObject, new()
 {
+    private static readonly T _workerObj = new T();
+
     private readonly ReferenceType _type;
     private void* _handle;
 
@@ -33,6 +35,6 @@ public unsafe ref struct NativeObjectReference<T> : ICheckableDisposable where T
             return;
 
         if (_type == ReferenceType.Owned)
-            NativeObject.FromNativePointer<T>(handle, ReferenceType.Owned)?.Dispose();
+            _workerObj.ReleaseInternal(handle);
     }
 }

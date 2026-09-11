@@ -34,6 +34,7 @@ public unsafe class ModalWindow : ComObject
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.Show);
         int hr = ((delegate* unmanaged[Stdcall]<void*, nint, int>)functionPointer)(nativePointer, hwndOwner);
+        AfterUnmanagedCall();
         if (hr >= 0)
             return true;
         if (hr != E_CANCEL)

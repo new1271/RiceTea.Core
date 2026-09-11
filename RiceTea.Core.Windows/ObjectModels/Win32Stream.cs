@@ -51,25 +51,28 @@ public unsafe sealed class Win32Stream : Win32SequentialStream, IWin32Stream
         ThrowHelper.ThrowExceptionForHR(hr);
     }
 
-    public void CopyTo(ComObject pstm, ulong cb, out ulong pcbRead, out ulong pcbWritten) => CopyToCore(pstm.NativePointer, cb, out pcbRead, out pcbWritten);
+    public void CopyTo(ComObject pstm, ulong cb, out ulong cbRead, out ulong cbWritten) => CopyToCore(pstm.NativePointer, cb, out cbRead, out cbWritten);
 
-    public void CopyTo(IWin32Stream pstm, ulong cb, out ulong pcbRead, out ulong pcbWritten)
+    public void CopyTo(IWin32Stream pstm, ulong cb, out ulong cbRead, out ulong cbWritten)
     {
         if (pstm is ComObject comObject)
         {
-            CopyToCore(comObject.NativePointer, cb, out pcbRead, out pcbWritten);
+            CopyToCore(comObject.NativePointer, cb, out cbRead, out cbWritten);
             return;
         }
-        CopyToCoreAlternative(pstm, cb, out pcbRead, out pcbWritten);
+        CopyToCoreAlternative(pstm, cb, out cbRead, out cbWritten);
     }
 
-    private void CopyToCore(void* pstm, ulong cb, out ulong pcbRead, out ulong pcbWritten)
+    private void CopyToCore(void* pstm, ulong cb, out ulong cbRead, out ulong cbWritten)
     {
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.Seek);
-        int hr = ((delegate* unmanaged[Stdcall]<void*, void*, ulong, ulong*, ulong*, int>)functionPointer)(nativePointer,
-            pstm, cb, UnsafeHelper.AsPointerOut(out pcbRead), UnsafeHelper.AsPointerOut(out pcbWritten));
-        ThrowHelper.ThrowExceptionForHR(hr);
+        fixed (ulong* pcbRead = &cbRead, pcbWritten = &cbWritten)
+        {
+            int hr = ((delegate* unmanaged[Stdcall]<void*, void*, ulong, ulong*, ulong*, int>)functionPointer)(nativePointer, pstm, cb, pcbRead, pcbWritten);
+            AfterUnmanagedCall();
+            ThrowHelper.ThrowExceptionForHR(hr);
+        }
     }
 
     private void CopyToCoreAlternative(IWin32Stream pstm, ulong cb, out ulong pcbRead, out ulong pcbWritten)
@@ -135,6 +138,7 @@ public unsafe sealed class Win32Stream : Win32SequentialStream, IWin32Stream
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.Commit);
         int hr = ((delegate* unmanaged[Stdcall]<void*, StreamCommitFlags, int>)functionPointer)(nativePointer, grfCommitFlags);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr);
     }
 
@@ -143,6 +147,7 @@ public unsafe sealed class Win32Stream : Win32SequentialStream, IWin32Stream
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.Revert);
         int hr = ((delegate* unmanaged[Stdcall]<void*, int>)functionPointer)(nativePointer);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr);
     }
 
@@ -152,6 +157,7 @@ public unsafe sealed class Win32Stream : Win32SequentialStream, IWin32Stream
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.LockRegion);
         int hr = ((delegate* unmanaged[Stdcall]<void*, ulong, ulong, LockType, int>)functionPointer)(nativePointer,
             libOffset, cb, dwLockType);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr);
     }
 
@@ -161,6 +167,7 @@ public unsafe sealed class Win32Stream : Win32SequentialStream, IWin32Stream
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.UnlockRegion);
         int hr = ((delegate* unmanaged[Stdcall]<void*, ulong, ulong, LockType, int>)functionPointer)(nativePointer,
             libOffset, cb, dwLockType);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr);
     }
 
@@ -172,6 +179,7 @@ public unsafe sealed class Win32Stream : Win32SequentialStream, IWin32Stream
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.Stat);
         int hr = ((delegate* unmanaged[Stdcall]<void*, StructuredStorageStat*, StructuredStorageStatFlags, int>)functionPointer)(nativePointer,
             &stat, grfStatFlag);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr);
         return stat;
     }
@@ -181,6 +189,7 @@ public unsafe sealed class Win32Stream : Win32SequentialStream, IWin32Stream
         void* nativePointer = NativePointer;
         void* functionPointer = GetFunctionPointerOrThrow(nativePointer, (int)MethodTable.Clone);
         int hr = ((delegate* unmanaged[Stdcall]<void*, void**, int>)functionPointer)(nativePointer, &nativePointer);
+        AfterUnmanagedCall();
         ThrowHelper.ThrowExceptionForHR(hr, nativePointer);
         return new Win32Stream(nativePointer, ReferenceType.Owned);
     }

@@ -9,13 +9,13 @@ namespace RiceTea.Core.Native;
 /// </summary>
 public abstract unsafe partial class NativeObject : CriticalFinalizerObject, ICheckableDisposable
 {
-    private ReferenceType _referenceType;
-    private void* _nativePointer;
+    private long _referenceType;
+    private nuint _nativePointer;
 
     public NativeObject()
     {
-        _referenceType = ReferenceType.NeedBinding;
-        _nativePointer = null;
+        _referenceType = (long)ReferenceType.NeedBinding;
+        _nativePointer = default;
     }
 
     public NativeObject(IntPtr handle, ReferenceType referenceType) : this(handle.ToPointer(), referenceType) { }
@@ -24,35 +24,35 @@ public abstract unsafe partial class NativeObject : CriticalFinalizerObject, ICh
     {
         _nativePointer = referenceType switch
         {
-            ReferenceType.NeedBinding => null,
-            ReferenceType.Owned or ReferenceType.Weak => nativePointer,
-            _ => (void*)ArgumentException.Throw<nuint>("Invalid reference type!", nameof(referenceType)),
+            ReferenceType.NeedBinding => default,
+            ReferenceType.Owned or ReferenceType.Weak => (nuint)nativePointer,
+            _ => ArgumentException.Throw<nuint>("Invalid reference type!", nameof(referenceType)),
         };
-        _referenceType = referenceType;
+        _referenceType = (long)referenceType;
     }
 
     public void* NativePointer
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _nativePointer;
+        get => (void*)Atomics.Read(ref _nativePointer);
     }
 
     public bool IsEmpty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _nativePointer == null;
+        get => NativePointer == default;
     }
 
     public ReferenceType ReferenceType
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _referenceType;
+        get => (ReferenceType)Atomics.Read(ref _referenceType);
     }
 
     public bool IsDisposed
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _referenceType == ReferenceType.Disposed;
+        get => ReferenceType == ReferenceType.Disposed;
     }
 
     protected void LateBind(IntPtr handle, ReferenceType referenceType)
@@ -60,37 +60,37 @@ public abstract unsafe partial class NativeObject : CriticalFinalizerObject, ICh
 
     protected void LateBind(void* handle, ReferenceType referenceType)
     {
-        if (referenceType == ReferenceType.NeedBinding || _referenceType != ReferenceType.NeedBinding)
+        if (referenceType == ReferenceType.NeedBinding ||
+            Atomics.CompareExchange(ref _referenceType, (long)referenceType, (long)ReferenceType.NeedBinding) != (long)ReferenceType.NeedBinding)
             return;
-        _referenceType = referenceType;
-        _nativePointer = handle;
+        Atomics.Write(ref _nativePointer, (nuint)handle);
     }
 
     protected abstract void AfterPointerCopied();
 
     protected abstract void ReleasePointer(void* pointer);
 
+    internal void ReleaseInternal(void* pointer) => ReleasePointer(pointer);
+
     protected virtual void DisposeManaged() { }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void DisposeCore(bool disposing)
     {
-        ReferenceType oldState = Cells.Exchange(ref _referenceType, ReferenceType.Disposed);
+        ReferenceType oldState = (ReferenceType)Atomics.Exchange(ref _referenceType, (long)ReferenceType.Disposed);
         if (oldState == ReferenceType.Disposed)
             return;
 
-        if (disposing)
-            DisposeManaged();
-
-        void* nativePointer = _nativePointer;
-
-        if (nativePointer == null)
-            return;
-
-        _nativePointer = null;
-
-        if (oldState == ReferenceType.Owned)
+        try
         {
-            lock (this)
+            if (disposing)
+                DisposeManaged();
+        }
+        finally
+        {
+            void* nativePointer = (void*)Atomics.Exchange(ref _nativePointer, default);
+
+            if (nativePointer is not null && oldState == ReferenceType.Owned)
                 ReleasePointer(nativePointer);
         }
     }
@@ -99,7 +99,9 @@ public abstract unsafe partial class NativeObject : CriticalFinalizerObject, ICh
 
     public void Dispose()
     {
-        DisposeCore(disposing: true);
         GC.SuppressFinalize(this);
+
+        DisposeCore(disposing: true);
+        AfterUnmanagedCall();
     }
 }

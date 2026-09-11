@@ -1,5 +1,6 @@
 #if NET472_OR_GREATER
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 using InlineMethod;
 
@@ -68,40 +69,65 @@ partial class SequenceHelper
                 return null;
         }
 
-        [Inline(InlineBehavior.Remove)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static T* IndexOf_FindResult(in Vector<T> sourceVector, ref T* sourcePointer)
         {
-            T* ptr = (T*)UnsafeHelper.AsPointerIn(in sourceVector);
-            T allBitSet = UnsafeHelper.GetAllBitsSetValue<T>();
-            switch (Vector<T>.Count)
+            return Vector<T>.Count switch
             {
-                case 4:
-                    if (UnsafeHelper.Equals(ptr[0], allBitSet))
-                        return sourcePointer + 0;
-                    if (UnsafeHelper.Equals(ptr[1], allBitSet))
-                        return sourcePointer + 1;
-                    if (UnsafeHelper.Equals(ptr[2], allBitSet))
-                        return sourcePointer + 2;
-                    return sourcePointer + 3;
-                case 2:
-                    return sourcePointer + MathHelper.BooleanToNativeUnsigned(UnsafeHelper.NotEquals(ptr[0], allBitSet));
-                case 1:
-                    return sourcePointer;
-                default:
-                    for (nuint i = 0; i < (nuint)Vector<T>.Count; i += 4, ptr += 4, sourcePointer += 4)
-                    {
-                        if (UnsafeHelper.Equals(ptr[0], allBitSet))
-                            return sourcePointer + 0;
-                        if (UnsafeHelper.Equals(ptr[1], allBitSet))
-                            return sourcePointer + 1;
-                        if (UnsafeHelper.Equals(ptr[2], allBitSet))
-                            return sourcePointer + 2;
-                        if (UnsafeHelper.Equals(ptr[3], allBitSet))
-                            return sourcePointer + 3;
-                    }
-                    break;
+                4 => _4(in sourceVector, ref sourcePointer),
+                2 => _2(in sourceVector, ref sourcePointer),
+                1 => _1(in sourceVector, ref sourcePointer),
+                _ => _Default(in sourceVector, ref sourcePointer)
+            };
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            static T* _4(in Vector<T> sourceVector, ref T* sourcePointer)
+            {
+                ref readonly T reference = ref UnsafeHelper.As<Vector<T>, T>(ref UnsafeHelper.AsRefIn(in sourceVector));
+                T allBitSet = UnsafeHelper.GetAllBitsSetValue<T>();
+
+                if (UnsafeHelper.Equals(reference, allBitSet))
+                    return sourcePointer + 0;
+                if (UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, 1), allBitSet))
+                    return sourcePointer + 1;
+                if (UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, 2), allBitSet))
+                    return sourcePointer + 2;
+                return sourcePointer + 3;
             }
-            return null;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            static T* _2(in Vector<T> sourceVector, ref T* sourcePointer)
+            {
+                ref readonly T reference = ref UnsafeHelper.As<Vector<T>, T>(ref UnsafeHelper.AsRefIn(in sourceVector));
+                T allBitSet = UnsafeHelper.GetAllBitsSetValue<T>();
+
+                return sourcePointer + MathHelper.BooleanToNativeUnsigned(UnsafeHelper.NotEquals(reference, allBitSet));
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            static T* _1(in Vector<T> sourceVector, ref T* sourcePointer)
+                => sourcePointer;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            static T* _Default(in Vector<T> sourceVector, ref T* sourcePointer)
+            {
+                ref readonly T reference = ref UnsafeHelper.As<Vector<T>, T>(ref UnsafeHelper.AsRefIn(in sourceVector));
+                T allBitSet = UnsafeHelper.GetAllBitsSetValue<T>();
+
+                for (nuint i = 0; i < (nuint)Vector<T>.Count; i += 4, sourcePointer += 4)
+                {
+                    if (UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, i), allBitSet))
+                        return sourcePointer + 0;
+                    if (UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, i + 1), allBitSet))
+                        return sourcePointer + 1;
+                    if (UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, i + 2), allBitSet))
+                        return sourcePointer + 2;
+                    if (UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, i + 3), allBitSet))
+                        return sourcePointer + 3;
+                }
+
+                return null;
+            }
         }
     }
 }

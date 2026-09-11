@@ -212,9 +212,39 @@ public struct RectF : IEquatable<RectF>
     public override readonly bool Equals(object? obj) => obj is RectF other && Equals(other);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly unsafe bool Equals(RectF other)
-        => SequenceHelper.Equals(UnsafeHelper.AsPointerIn(this), UnsafeHelper.AsPointerIn(other), sizeof(RectF));
+    public readonly unsafe bool Equals(in RectF other) => EqualsCore(this, other);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly unsafe bool Equals(RectF other) => EqualsCore(this, other);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static unsafe bool EqualsCore(in RectF a, in RectF b)
+    {
+        fixed (RectF* ptr = &a, ptr2 = &b)
+        {
+#if NET8_0_OR_GREATER
+            if (Limits.UseVector128())
+                return System.Runtime.Intrinsics.Vector128.Load((float*)ptr) == System.Runtime.Intrinsics.Vector128.Load((float*)ptr2);
+#else
+            if (Limits.UseVector())
+            {        
+                const int V128ByteCount = 128 / 8;
+
+                switch (System.Numerics.Vector<byte>.Count)
+                {
+                    case V128ByteCount:
+                        return _V128((byte*)ptr, (byte*)ptr2);
+                }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                static bool _V128(byte* ptr, byte* ptr2)
+                    => (UnsafeHelper.Read<System.Numerics.Vector<float>>(ptr) == UnsafeHelper.Read<System.Numerics.Vector<float>>(ptr2));
+            }
+#endif
+        }
+
+        return a.Left == b.Left && a.Top == b.Top && a.Right == b.Right && a.Bottom == b.Bottom;
+    }
     public override readonly unsafe int GetHashCode()
     {
         float left = Left, top = Top, right = Right, bottom = Bottom;

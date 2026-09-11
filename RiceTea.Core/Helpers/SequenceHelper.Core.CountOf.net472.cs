@@ -1,5 +1,6 @@
 #if NET472_OR_GREATER
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 using InlineMethod;
 
@@ -66,63 +67,97 @@ partial class SequenceHelper
         [Inline(InlineBehavior.Remove)]
         private static void CountOf_CollectResult(in Vector<T> sourceVector, ref nuint counter, nuint offset, [InlineParameter] bool isFullyCheck, [InlineParameter] bool fromMostIndex)
         {
-            T* ptr = (T*)UnsafeHelper.AsPointerIn(in sourceVector);
-            T allBitSet = UnsafeHelper.GetAllBitsSetValue<T>();
-            if (isFullyCheck)
+            counter += isFullyCheck ? 
+                FullyCheck(in sourceVector, offset) : 
+                OptionalCheck(in sourceVector, offset, fromMostIndex ? (nuint)Vector<T>.Count - offset : 0);
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            static nuint FullyCheck(in Vector<T> sourceVector, nuint offset)
             {
-                switch (Vector<T>.Count)
+                return Vector<T>.Count switch
                 {
-                    case 4:
+                    4 => _4(sourceVector, offset),
+                    2 => _2(sourceVector, offset),
+                    1 => _1(sourceVector, offset),
+                    _ => _Default(sourceVector, offset),
+                };
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                static nuint _4(in Vector<T> sourceVector, nuint offset)
+                {
+                    ref readonly T reference = ref UnsafeHelper.As<Vector<T>, T>(ref UnsafeHelper.AsRefIn(in sourceVector));
+                    T allBitSet = UnsafeHelper.GetAllBitsSetValue<T>();
+                    return MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(reference, allBitSet)) +
+                        MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, 1), allBitSet)) +
+                        MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, 2), allBitSet)) +
+                        MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, 3), allBitSet));
+                }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                static nuint _2(in Vector<T> sourceVector, nuint offset)
+                {
+                    ref readonly T reference = ref UnsafeHelper.As<Vector<T>, T>(ref UnsafeHelper.AsRefIn(in sourceVector));
+                    T allBitSet = UnsafeHelper.GetAllBitsSetValue<T>();
+                    return MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(reference, allBitSet)) +
+                         MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, 1), allBitSet));
+                }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                static nuint _1(in Vector<T> sourceVector, nuint offset)
+                {
+                    ref readonly T reference = ref UnsafeHelper.As<Vector<T>, T>(ref UnsafeHelper.AsRefIn(in sourceVector));
+                    T allBitSet = UnsafeHelper.GetAllBitsSetValue<T>();
+                    return MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(reference, allBitSet));
+                }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                static nuint _Default(in Vector<T> sourceVector, nuint offset)
+                {
+                    nuint counter = 0;
+
+                    ref readonly T reference = ref UnsafeHelper.As<Vector<T>, T>(ref UnsafeHelper.AsRefIn(in sourceVector));
+                    T allBitSet = UnsafeHelper.GetAllBitsSetValue<T>();
+                    for (nuint i = 0; i < (nuint)Vector<T>.Count; i += 4)
+                    {
                         counter +=
-                            MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(ptr[0], allBitSet)) +
-                            MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(ptr[1], allBitSet)) +
-                            MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(ptr[2], allBitSet)) +
-                            MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(ptr[3], allBitSet));
-                        break;
-                    case 2:
-                        counter +=
-                            MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(ptr[0], allBitSet)) +
-                            MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(ptr[1], allBitSet));
-                        break;
-                    case 1:
-                        counter += MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(ptr[0], allBitSet));
-                        break;
-                    default:
-                        for (nuint i = 0; i < (nuint)Vector<T>.Count; i += 4, ptr += 4)
-                        {
-                            counter +=
-                                MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(ptr[0], allBitSet)) +
-                                MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(ptr[1], allBitSet)) +
-                                MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(ptr[2], allBitSet)) +
-                                MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(ptr[3], allBitSet));
-                        }
-                        break;
+                            MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, i), allBitSet)) +
+                            MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, i + 1), allBitSet)) +
+                            MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, i + 2), allBitSet)) +
+                            MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, i + 3), allBitSet));
+                    }
+
+                    return counter;
                 }
             }
-            else
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            static nuint OptionalCheck(in Vector<T> sourceVector, nuint index, nuint offset)
             {
-                if (fromMostIndex)
-                    ptr += (nuint)Vector<T>.Count - offset;
-                for (; offset >= 4; offset -= 4, ptr += 4) // 4x 展開
+                nuint counter = 0;
+
+                ref readonly T reference = ref UnsafeHelper.As<Vector<T>, T>(ref UnsafeHelper.AsRefIn(in sourceVector));
+                T allBitSet = UnsafeHelper.GetAllBitsSetValue<T>();
+                for (; offset >= 4; offset -= 4, index += 4) // 4x 展開
                 {
                     counter +=
-                        MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(ptr[0], allBitSet)) +
-                        MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(ptr[1], allBitSet)) +
-                        MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(ptr[2], allBitSet)) +
-                        MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(ptr[3], allBitSet));
+                        MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, index), allBitSet)) +
+                        MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, index + 1), allBitSet)) +
+                        MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, index + 2), allBitSet)) +
+                        MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, index + 3), allBitSet));
                 }
-                T* ptrEnd = ptr + offset;
-                if (ptr >= ptrEnd)
-                    return;
-                counter += MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(*ptr, allBitSet));
-                ptr++;
-                if (ptr >= ptrEnd)
-                    return;
-                counter += MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(*ptr, allBitSet));
-                ptr++;
-                if (ptr >= ptrEnd)
-                    return;
-                counter += MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(*ptr, allBitSet));
+                if (offset <= 0)
+                    goto Tail;
+                counter += MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, index), allBitSet));
+                index++;
+                if (offset <= 1)
+                    goto Tail;
+                counter += MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, index + 1), allBitSet));
+                if (offset <= 2)
+                    goto Tail;
+                counter += MathHelper.BooleanToNativeUnsigned(UnsafeHelper.Equals(UnsafeHelper.AddTypedOffsetAsReadOnly(in reference, index + 2), allBitSet));
+
+            Tail:
+                return counter;
             }
         }
     }

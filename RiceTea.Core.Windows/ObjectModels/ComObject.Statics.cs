@@ -27,7 +27,10 @@ unsafe partial class ComObject
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void* CoCreateInstanceCore(in Guid clsid, in Guid iid, bool throwWhenFailed)
-        => CoCreateInstanceCore(UnsafeHelper.AsPointerIn(in clsid), UnsafeHelper.AsPointerIn(in iid), throwWhenFailed);
+    {
+        fixed (Guid* rclsid = &clsid, riid = &iid)
+            return CoCreateInstanceCore(rclsid, riid, throwWhenFailed);
+    }
 
     [Inline(InlineBehavior.Remove)]
     private static void* CoCreateInstanceCore(Guid* rclsid, Guid* riid, bool throwWhenFailed)
