@@ -1,7 +1,7 @@
 #if NET472_OR_GREATER
 namespace System.IO;
 
-partial class PathExtensions
+partial class PathInternal
 {
     private interface IPlatformImpl
     {

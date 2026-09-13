@@ -13,8 +13,8 @@ public static partial class PathExtensions
         /// <param name="path">The destination path.</param>
         /// <returns>The relative path or <paramref name="path"/> if the paths don't share the same root.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="relativeTo"/> or <paramref name="path"/> is <c>null</c> or an empty string.</exception>
-        public static string GetRelativePath(string relativeTo, string path) 
-            => GetRelativePathCore(relativeTo, path, _impl);
+        public static string GetRelativePath(string relativeTo, string path)
+            => PathInternal.GetRelativePath(relativeTo, path);
 
         /// <summary>
         /// Returns true if the path is fixed to a specific drive or UNC path. This method does no
@@ -32,11 +32,7 @@ public static partial class PathExtensions
         /// Thrown if <paramref name="path"/> is null.
         /// </exception>
         public static bool IsPathFullyQualified(string path)
-        {
-            ArgumentNullException.ThrowIfNull(path);
-
-            return !_impl.IsPartiallyQualified(path);
-        }
+            => !PathInternal.IsPartiallyQualified(path);
     }
 }
 #endif

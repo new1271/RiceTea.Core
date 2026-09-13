@@ -5,7 +5,7 @@ using RiceTea.Core.Helpers;
 
 namespace System.IO;
 
-partial class PathExtensions
+partial class PathInternal
 {
     // Copied from https://github.com/dotnet/runtime/blob/main/src/libraries/Common/src/System/IO/PathInternal.Windows.cs
     private sealed class WindowsImpl : IPlatformImpl
@@ -20,7 +20,7 @@ partial class PathExtensions
         private const int UncExtendedPrefixLength = 8;
         private const char VolumeSeparatorChar = ':';
 
-        public unsafe bool IsEffectivelyEmpty(string path)
+        public static unsafe bool IsEffectivelyEmpty(string path)
         {
             fixed (char* ptr = path)
             {
@@ -36,7 +36,7 @@ partial class PathExtensions
             }
         }
 
-        public int GetRootLength(string path)
+        public static int GetRootLength(string path)
         {
             int pathLength = path.Length;
             int i = 0;
@@ -93,7 +93,7 @@ partial class PathExtensions
             return i;
         }
 
-        public StringComparison GetPathComparisonMode() => StringComparison.OrdinalIgnoreCase;
+        public static StringComparison GetPathComparisonMode() => StringComparison.OrdinalIgnoreCase;
 
         /// <summary>
         /// Returns true if the given character is a valid drive letter
@@ -158,7 +158,7 @@ partial class PathExtensions
         /// Returns true if the two paths have the same root
         /// </summary>
         [Inline(InlineBehavior.Remove)]
-        private bool AreRootsEqual(string first, string second)
+        private static bool AreRootsEqual(string first, string second)
         {
             int firstRootLength = GetRootLength(first);
             int secondRootLength = GetRootLength(second);
@@ -185,7 +185,7 @@ partial class PathExtensions
         /// for C: (rooted, but relative). "C:\a" is rooted and not relative (the current directory
         /// will not be used to modify the path).
         /// </remarks>
-        public bool IsPartiallyQualified(string path)
+        public static bool IsPartiallyQualified(string path)
         {
             if (path.Length < 2)
             {
@@ -213,6 +213,14 @@ partial class PathExtensions
                 // not qualified if you don't have a valid drive. "=:\" is the "=" file's default data stream.
                 && IsValidDriveChar(reference));
         }
+
+        bool IPlatformImpl.IsEffectivelyEmpty(string path) => IsEffectivelyEmpty(path);
+
+        int IPlatformImpl.GetRootLength(string path) => GetRootLength(path);
+
+        StringComparison IPlatformImpl.GetPathComparisonMode() => GetPathComparisonMode();
+
+        bool IPlatformImpl.IsPartiallyQualified(string path) => IsPartiallyQualified(path);
     }
 }
 #endif

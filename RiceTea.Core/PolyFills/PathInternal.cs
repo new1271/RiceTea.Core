@@ -1,14 +1,16 @@
 #if NET472_OR_GREATER
+using System.Runtime.CompilerServices;
+
 using InlineMethod;
 
 using RiceTea.Core;
+using RiceTea.Core.Extensions;
 using RiceTea.Core.Helpers;
 using RiceTea.Core.Text;
 
 namespace System.IO;
 
-// Copied from https://github.com/dotnet/runtime/blob/main/src/libraries/Common/src/System/IO/PathInternal.cs
-partial class PathExtensions
+internal partial class PathInternal
 {
     private static readonly IPlatformImpl _impl = GetPlatformImplForPlatform();
 
@@ -25,11 +27,26 @@ partial class PathExtensions
     /// <summary>
     /// Returns true if the two paths have the same root
     /// </summary>
-    [Inline(InlineBehavior.Remove)]
-    private static bool AreRootsEqual(string first, string second, IPlatformImpl impl, StringComparison comparisonType)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool AreRootsEqual(string first, string second, StringComparison comparisonType)
     {
-        int firstRootLength = impl.GetRootLength(first);
-        int secondRootLength = impl.GetRootLength(second);
+        int firstRootLength, secondRootLength;
+        IPlatformImpl impl = _impl;
+        switch (impl)
+        {
+            case WindowsImpl:
+                firstRootLength = WindowsImpl.GetRootLength(first);
+                secondRootLength = WindowsImpl.GetRootLength(second);
+                break;
+            case UnixImpl:
+                firstRootLength = UnixImpl.GetRootLength(first);
+                secondRootLength = UnixImpl.GetRootLength(second);
+                break;
+            default:
+                firstRootLength = impl.GetRootLength(first);
+                secondRootLength = impl.GetRootLength(second);
+                break;
+        }
 
         return firstRootLength == secondRootLength
             && SequenceHelper.Equals(
@@ -44,7 +61,7 @@ partial class PathExtensions
     /// <summary>
     /// Gets the count of common characters from the left optionally ignoring case
     /// </summary>
-    [Inline(InlineBehavior.Remove)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static unsafe int EqualStartingCharacterCount(string first, string second, bool ignoreCase)
     {
         if (StringHelper.IsNullOrEmpty(first) || StringHelper.IsNullOrEmpty(second))
@@ -75,7 +92,7 @@ partial class PathExtensions
     /// <summary>
     /// Get the common path length from the start of the string.
     /// </summary>
-    [Inline(InlineBehavior.Remove)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int GetCommonPathLength(string first, string second, bool ignoreCase)
     {
         int commonChars = EqualStartingCharacterCount(first, second, ignoreCase: ignoreCase);
@@ -110,27 +127,48 @@ partial class PathExtensions
     private static bool EndsInDirectorySeparator(string path)
     {
         int length = path.Length;
-        return length > 0 && IsDirectorySeparator(path[length - 1]);
+        return length > 0 && IsDirectorySeparator(path.LastOrDefault());
     }
 
-    [Inline(InlineBehavior.Remove)]
-    private static string GetRelativePathCore(string relativeTo, string path, IPlatformImpl impl)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static string GetRelativePath(string relativeTo, string path)
     {
         ArgumentNullException.ThrowIfNull(relativeTo);
         ArgumentNullException.ThrowIfNull(path);
 
-        if (impl.IsEffectivelyEmpty(relativeTo))
-            ArgumentException.Throw("the path cannot be empty!", nameof(relativeTo));
-        if (impl.IsEffectivelyEmpty(path))
-            ArgumentException.Throw("the path cannot be empty!", nameof(path));
+        StringComparison comparison;
+
+        IPlatformImpl impl = _impl;
+        switch (impl)
+        {
+            case WindowsImpl:
+                if (WindowsImpl.IsEffectivelyEmpty(relativeTo))
+                    ArgumentException.Throw("the path cannot be empty!", nameof(relativeTo));
+                if (WindowsImpl.IsEffectivelyEmpty(path))
+                    ArgumentException.Throw("the path cannot be empty!", nameof(path));
+                comparison = WindowsImpl.GetPathComparisonMode();
+                break;
+            case UnixImpl:
+                if (UnixImpl.IsEffectivelyEmpty(relativeTo))
+                    ArgumentException.Throw("the path cannot be empty!", nameof(relativeTo));
+                if (UnixImpl.IsEffectivelyEmpty(path))
+                    ArgumentException.Throw("the path cannot be empty!", nameof(path));
+                comparison = UnixImpl.GetPathComparisonMode();
+                break;
+            default:
+                if (impl.IsEffectivelyEmpty(relativeTo))
+                    ArgumentException.Throw("the path cannot be empty!", nameof(relativeTo));
+                if (impl.IsEffectivelyEmpty(path))
+                    ArgumentException.Throw("the path cannot be empty!", nameof(path));
+                comparison = impl.GetPathComparisonMode();
+                break;
+        }
 
         relativeTo = Path.GetFullPath(relativeTo);
         path = Path.GetFullPath(path);
 
-        StringComparison comparison = impl.GetPathComparisonMode();
-
         // Need to check if the roots are different- if they are we need to return the "to" path.
-        if (!AreRootsEqual(relativeTo, path, impl, comparison))
+        if (!AreRootsEqual(relativeTo, path, comparison))
             return path;
 
         int commonLength = GetCommonPathLength(relativeTo, path, ignoreCase: comparison == StringComparison.OrdinalIgnoreCase);
@@ -209,6 +247,20 @@ partial class PathExtensions
         }
 
         return builder.ToString();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsPartiallyQualified(string path)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+
+        IPlatformImpl impl = _impl;
+        return impl switch
+        {
+            WindowsImpl => WindowsImpl.IsPartiallyQualified(path),
+            UnixImpl => UnixImpl.IsPartiallyQualified(path),
+            _ => impl.IsPartiallyQualified(path),
+        };
     }
 }
 #endif
