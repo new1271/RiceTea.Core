@@ -43,6 +43,44 @@ unsafe partial class SequenceHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool Equals(string? a, string? b, int length, StringComparison comparisonType)
+    {
+        if (ReferenceEquals(a, b))
+            return true;
+        if (a is null || b is null)
+            return false;
+        return comparisonType switch
+        {
+            StringComparison.CurrentCulture => CultureInfo.CurrentCulture.CompareInfo.Compare(a, 0, length, b, 0, length, CompareOptions.None) == 0,
+            StringComparison.CurrentCultureIgnoreCase => CultureInfo.CurrentCulture.CompareInfo.Compare(a, 0, length, b, 0, length, CompareOptions.IgnoreCase) == 0,
+            StringComparison.InvariantCulture => CultureInfo.InvariantCulture.CompareInfo.Compare(a, 0, length, b, 0, length, CompareOptions.None) == 0,
+            StringComparison.InvariantCultureIgnoreCase => CultureInfo.InvariantCulture.CompareInfo.Compare(a, 0, length, b, 0, length, CompareOptions.IgnoreCase) == 0,
+            StringComparison.OrdinalIgnoreCase => EqualsIgnoreCaseCore(a, b, length),
+            StringComparison.Ordinal => EqualsCore(a, b, length),
+            _ => ArgumentOutOfRangeException.Throw<bool>(nameof(comparisonType))
+        };
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool Equals(string? a, int indexA, string? b, int indexB, int length, StringComparison comparisonType)
+    {
+        if (ReferenceEquals(a, b))
+            return true;
+        if (a is null || b is null)
+            return false;
+        return comparisonType switch
+        {
+            StringComparison.CurrentCulture => CultureInfo.CurrentCulture.CompareInfo.Compare(a, indexA, length, b, indexB, length, CompareOptions.None) == 0,
+            StringComparison.CurrentCultureIgnoreCase => CultureInfo.CurrentCulture.CompareInfo.Compare(a, indexA, length, b, indexB, length, CompareOptions.IgnoreCase) == 0,
+            StringComparison.InvariantCulture => CultureInfo.InvariantCulture.CompareInfo.Compare(a, indexA, length, b, indexB, length, CompareOptions.None) == 0,
+            StringComparison.InvariantCultureIgnoreCase => CultureInfo.InvariantCulture.CompareInfo.Compare(a, indexA, length, b, indexB, length, CompareOptions.IgnoreCase) == 0,
+            StringComparison.OrdinalIgnoreCase => EqualsIgnoreCaseCore(a, indexA, b, indexB, length),
+            StringComparison.Ordinal => EqualsCore(a, indexA, b, indexB, length),
+            _ => ArgumentOutOfRangeException.Throw<bool>(nameof(comparisonType))
+        };
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Equals<T>(T[]? a, T[]? b)
     {
         if (ReferenceEquals(a, b))
@@ -93,27 +131,89 @@ unsafe partial class SequenceHelper
         => EqualsCore<T>(ptr, ptr2, length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool EqualsCore(string str1, string str2)
+    private static bool EqualsCore(string a, string b)
     {
-        int length = str1.Length;
-        if (length != str2.Length)
+        int length = a.Length;
+        if (length != b.Length)
             return false;
-        fixed (char* ptr = str1, ptr2 = str2)
+        fixed (char* ptr = a, ptr2 = b)
             return EqualsCore<char>(ptr, ptr2, MathHelper.MakeUnsigned(length));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool EqualsIgnoreCaseCore(string str1, string str2)
+    private static bool EqualsCore(string a, string b, int length)
     {
-        int length = str1.Length;
-        if (length != str2.Length)
+        ArgumentOutOfRangeException.ThrowIfNegative(length);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(length, a.Length);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(length, b.Length);
+
+        fixed (char* ptr = a, ptr2 = b)
+            return EqualsCore<char>(ptr, ptr2, MathHelper.MakeUnsigned(length));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool EqualsCore(string a, int indexA, string b, int indexB, int length)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(indexA);
+        ArgumentOutOfRangeException.ThrowIfNegative(indexB);
+        ArgumentOutOfRangeException.ThrowIfNegative(length);
+
+        if (indexA + length > a.Length)
+            ArgumentOutOfRangeException.Throw(indexA >= a.Length ? nameof(indexA) : nameof(length));
+        if (indexB + length > b.Length)
+            ArgumentOutOfRangeException.Throw(indexB >= b.Length ? nameof(indexB) : nameof(length));
+
+        fixed (char* ptr = a, ptr2 = b)
+            return EqualsCore<char>(ptr, ptr2, MathHelper.MakeUnsigned(length));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool EqualsIgnoreCaseCore(string a, string b)
+    {
+        int length = a.Length;
+        if (length != b.Length)
             return false;
-        if (ContainsGreaterThan(str1, '\u007F'))
-            return ContainsGreaterThan(str2, '\u007F') && string.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);
-        if (ContainsGreaterThan(str2, '\u007F'))
+        if (ContainsGreaterThan(a, '\u007F'))
+            return ContainsGreaterThan(b, '\u007F') && string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+        if (ContainsGreaterThan(b, '\u007F'))
             return false;
-        fixed (char* ptr = str1, ptr2 = str2)
+        fixed (char* ptr = a, ptr2 = b)
             return FastCore<ushort>.RangedAddAndEquals((ushort*)ptr, (ushort*)ptr2, MathHelper.MakeUnsigned(length), 'A', 'Z', 'a' - 'A');
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool EqualsIgnoreCaseCore(string a, string b, int length)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(length);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(length, a.Length);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(length, b.Length);
+
+        if (ContainsGreaterThan(a, '\u007F'))
+            return ContainsGreaterThan(b, '\u007F') && string.Compare(a, 0, b, 0, length, StringComparison.OrdinalIgnoreCase) == 0;
+        if (ContainsGreaterThan(b, '\u007F'))
+            return false;
+        fixed (char* ptr = a, ptr2 = b)
+            return FastCore<ushort>.RangedAddAndEquals((ushort*)ptr, (ushort*)ptr2, (uint)length, 'A', 'Z', 'a' - 'A');
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool EqualsIgnoreCaseCore(string a, int indexA, string b, int indexB, int length)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(indexA);
+        ArgumentOutOfRangeException.ThrowIfNegative(indexB);
+        ArgumentOutOfRangeException.ThrowIfNegative(length);
+
+        if (indexA + length > a.Length)
+            ArgumentOutOfRangeException.Throw(indexA >= a.Length ? nameof(indexA) : nameof(length));
+        if (indexB + length > b.Length)
+            ArgumentOutOfRangeException.Throw(indexB >= b.Length ? nameof(indexB) : nameof(length));
+
+        if (ContainsGreaterThan(a, '\u007F'))
+            return ContainsGreaterThan(b, '\u007F') && string.Compare(a, indexA, b, indexB, length, StringComparison.OrdinalIgnoreCase) == 0;
+        if (ContainsGreaterThan(b, '\u007F'))
+            return false;
+        fixed (char* ptr = a, ptr2 = b)
+            return FastCore<ushort>.RangedAddAndEquals((ushort*)ptr + indexA, (ushort*)ptr2 + indexB, (uint)length, 'A', 'Z', 'a' - 'A');
     }
 
     [Inline(InlineBehavior.Remove)]
