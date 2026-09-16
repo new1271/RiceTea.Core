@@ -23,7 +23,7 @@ public sealed partial class Win32Process : CriticalFinalizerObject, IDisposable
 
     private readonly LazyTiny<ProcessExitWaiterThread, Win32Process> _exitWaiterLazy;
     private readonly LazyTiny<string> _nameLazy;
-    private readonly Stream _stdIn, _stdOut, _stdErr;
+    private readonly FileStream? _stdIn, _stdOut, _stdErr;
 
     private readonly string? _workingDirectory;
     private readonly IntPtr _handle, _childStdInHandle, _childStdOutHandle, _childStdErrHandle;
@@ -73,11 +73,11 @@ public sealed partial class Win32Process : CriticalFinalizerObject, IDisposable
 
     public string ImageName => _nameLazy.Value;
 
-    public Stream StandardInput => _stdIn;
+    public FileStream? StandardInput => _stdIn;
 
-    public Stream StandardOutput => _stdOut;
+    public FileStream? StandardOutput => _stdOut;
 
-    public Stream StandardError => _stdErr;
+    public FileStream? StandardError => _stdErr;
 
     private Win32Process(string? workingDirectory, uint id, IntPtr handle, bool keepHandleWhenDisposing)
     {
@@ -88,9 +88,9 @@ public sealed partial class Win32Process : CriticalFinalizerObject, IDisposable
         _workingDirectory = workingDirectory;
         _id = id;
         _handle = handle;
-        _stdIn = Stream.Null;
-        _stdOut = Stream.Null;
-        _stdErr = Stream.Null;
+        _stdIn = null;
+        _stdOut = null;
+        _stdErr = null;
         _exitWaiterLazy = new LazyTiny<ProcessExitWaiterThread, Win32Process>(_this => new ProcessExitWaiterThread(_this), this, LazyThreadSafetyMode.ExecutionAndPublication);
         _nameLazy = new LazyTiny<string>(GetProcessImageNameCore);
     }
