@@ -80,7 +80,11 @@ partial class ArrayPool<T>
             else
             {
                 capacity >>= 4;
-                index = MathHelper.Log2(capacity);
+                do
+                {
+                    index = MathHelper.Log2(capacity);
+                }
+                while (index > GlobalBucketCount);
                 index += MathHelper.BooleanToInt32(capacity >= (1U << index));
             }
 

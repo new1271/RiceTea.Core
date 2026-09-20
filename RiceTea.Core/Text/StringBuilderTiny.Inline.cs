@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 
 using InlineMethod;
@@ -29,7 +30,7 @@ unsafe partial struct StringBuilderTiny
     [Inline(InlineBehavior.Keep, export: true)]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AppendLine()
-        => Append('\n');
+        => Append(Environment.NewLine);
 
     [Inline(InlineBehavior.Keep, export: true)]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
