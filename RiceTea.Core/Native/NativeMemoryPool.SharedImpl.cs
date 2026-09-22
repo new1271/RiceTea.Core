@@ -80,6 +80,7 @@ unsafe partial class NativeMemoryPool
                 index = MathHelper.Log2(capacity);
             while (index > GlobalBucketCount);
             index += MathHelper.BooleanToInt32(capacity >= (1U << index));
+            capacity = (nuint)(1 << (index + 4));
 
             void* result;
             if (index < LocalBucketCount)
